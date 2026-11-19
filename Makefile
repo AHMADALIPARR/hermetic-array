@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -std=c11 -Wall -Wextra -O2 -I src
 LDFLAGS = -lm
 
-SRCS = src/array.c src/geom.c src/main.c
+SRCS = src/array.c src/main.c
 OBJS = $(SRCS:.c=.o)
 
 all: hao
