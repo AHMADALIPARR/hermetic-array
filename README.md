@@ -70,43 +70,95 @@ ab = a \cdot b + a \wedge b
 
 Canonical EBNF is recorded in `docs/grammar.md`. Every accepted program is required to have exactly one parse. The current parser (`src/parser.c`) is a minimal recursive-descent skeleton for atoms and array literals; full trains, modifiers, and geometry expressions remain partial.
 
-## 5. BQN, APL, J, Q/K, Klong Semantics
+Key grammar features from `docs/grammar.md`:
+- Explicit trains and composition.
+- Glyphs and identifiers for primitives.
+- Array literals and optional shape annotations.
+- Deterministic error kinds (rank, length, domain, index, type).
 
-Pure implementations live under `lang/`:
+## 5. Module Details: Pure Array Languages (`lang/`)
 
-- `lang/engine.bqn`, `lang/sphere.bqn`, `lang/ga.bqn`, `lang/types.bqn`, `lang/group.bqn`
-- `lang/engine.apl`, `lang/operators.apl`, `lang/group.apl`, `lang/tensor.apl`
-- `lang/engine.j`, `lang/recursion.j`
-- `lang/engine.klong`, `lang/evolution.klong`, `lang/recursion.klong`
-- `lang/q_engine.q`
+All files under `lang/` are native source for their respective interpreters. They implement geometric primitives using only the host language’s array operators.
 
-These are native expressions using each language’s primitives. They are not a single shared interpreter.
+### BQN modules
+- `lang/engine.bqn`: Defines `Norm`, `Dot`, `Normalize`, `Sinc`, `SphereExp`, `Geodesic`, `Evolve`, plus structural `Reshape`, `Permute`, `Rotate`. Uses BQN trains and blocks.
+- `lang/sphere.bqn`: Focused sphere exponential map with `IsUnit` and `IsTangent` checks. Continuous sinc via Taylor at zero.
+- `lang/ga.bqn`: Simplified geometric product and exterior product for 3D (scalar + cross-product component). Reversion and grade extraction.
+- `lang/types.bqn`, `lang/group.bqn`, `lang/glyph_registry.bqn`: Type annotations, group actions, and glyph inventory (partial).
 
-**Native BQN example (from `lang/sphere.bqn`):**
-```bqn
-SphereExp ← {
-  x ← ⊢
-  v ← ⊣
-  nv ← √ Norm v
-  c ← Cos nv
-  s ← Sinc nv
-  c×x + s×v
-}
-```
+### APL modules
+- `lang/engine.apl`, `lang/operators.apl`: Sphere exponential map and related operators using APL primitives (`√+×`, circle functions, etc.).
+- `lang/group.apl`, `lang/tensor.apl`: Group actions and tensor-level operations.
 
-**Native APL example (from `lang/operators.apl`):**
-```apl
-SphereExp ← {
-  x ← ⍴
-  v ← ⍵
-  nv ← √+×v
-  c ← 2○○¯1×nv
-  s ← (1○¯¯1×nv)÷nv
-  (c×x)+s×v
-}
-```
+### J modules
+- `lang/engine.j`, `lang/recursion.j`: Tacit-style definitions and recursive evolution.
 
-## 6. Hermetic Geometric Algebra
+### Klong modules
+- `lang/engine.klong`, `lang/evolution.klong`, `lang/recursion.klong`: Compact recursive definitions of evolution and sphere operations.
+
+### Q/K module
+- `lang/q_engine.q`: Vector operations and recursive geometric steps in Q syntax.
+
+These modules are independent. No single process executes them all.
+
+## 6. Module Details: C11 Array Engine (`src/`)
+
+### `src/array.h` / `src/array.c`
+- `HaoArray` structure: type, rank, shape, strides, data, element count, ownership, bytes.
+- Cache-aligned pool (`HaoPool`, `hao_pool_init` using `aligned_alloc`, 64-byte lines).
+- Memory accounting globals: `hao_total_bytes`, `hao_peak_bytes`, `hao_alloc_count`.
+- Creation, free, pointer arithmetic offset (`hao_offset`), bounds checks.
+- Structural: reshape, permute axes, rotate.
+- Metric: inner product (4-wide unrolled), norm, normalize.
+- Evolution: `hao_evolve_sphere` with precondition checks (unit norm, tangency) and 4-wide unrolled steps.
+
+### `src/geom.h` / `src/geom.c`
+- Low-level: `hao_norm2`, `hao_dot` (pointer-arithmetic / 4-wide), `hao_sinc`, `hao_sphere_exp`.
+- Checks: `hao_is_unit`, `hao_is_tangent`, `hao_is_orthogonal`.
+- Array-level: `hao_array_sphere_exp`, geometric product, exterior, sandwich (placeholder), group act (identity), geodesic.
+- Quaternion multiply and rotate.
+
+### `src/parser.c` / `src/parser.h`
+- Minimal recursive-descent parser for atoms, numbers, glyphs, and array literals.
+- Node kinds: ATOM, ARRAY, etc.
+- Free function for AST.
+
+### `src/ir.c` / `src/ir.h`
+- Skeleton IR with ops: LOAD, EXP, DOT, NORM, RESHAPE, PERMUTE, GEO_PROD, EVOLVE.
+- `ir_from_node` and `ir_eval` dispatch (partial; sphere exp path wired).
+
+### `src/toolchain.c` / `src/toolchain.h`
+- Zero-dependency dispatcher bridging string op names to C kernels (`hao_toolchain_eval`).
+- Supports sphere exp, evolve, norm, geoprod, act.
+- Hand-rolled main for testing geometric steps on fixed 3-vectors.
+
+### `src/main.c`
+- Initializes 1 MiB pool.
+- Parses argument, builds IR, evaluates, prints rank/count, reports memory, frees pool.
+
+### `src/glyph.c`
+- Glyph handling support (present in tree).
+
+## 7. Module Details: Formal Verification (`proofs/`)
+
+Agda modules provide mathematical sketches, not verified compilation of the C runtime:
+- `proofs/Array.agda`: Rank-indexed arrays as `Vec`, shape-indexed element count, bounded indices, lookup total by construction. States that axis permutation preserves element count (reflexive proof).
+- `proofs/Sphere.agda`: Norm, dot, sinc, exponential map. States unit-norm preservation under unit and tangent preconditions (reflexive).
+- `proofs/Geometry.agda`, `proofs/Operators.agda`, `proofs/Type.agda`: Additional shape and operator contracts.
+
+These are not machine-checked against the C implementation.
+
+## 8. Module Details: Documentation and Tests
+
+- `docs/grammar.md`: Full EBNF for the intended surface syntax.
+- `docs/compatibility.md`: Glyph and operator collision resolution across languages.
+- `docs/operators/README.md`: Operator inventory skeleton.
+- `docs/assets/`: Hero, recursive geometry, and architecture SVGs.
+- `docs/ASSET-CREDITS.md`: SVG provenance; no photographs committed.
+- `docs/references/bibliography.md`: Background references.
+- `tests/test_sphere.c`: C test constructing unit vector and small tangent, calling `hao_array_sphere_exp`, asserting final norm ≈ 1.
+
+## 9. Hermetic Geometric Algebra
 
 Implemented kernels (C11, zero external dependencies):
 - Sphere exponential map with unit and tangency checks (`hao_array_sphere_exp`).
@@ -117,7 +169,7 @@ Implemented kernels (C11, zero external dependencies):
 
 Pure counterparts exist in `lang/ga.bqn` and related files.
 
-## 7. Recursive Array Transformation Engine
+## 10. Recursive Array Transformation Engine
 
 Evolution operator:
 \[
@@ -131,7 +183,7 @@ Pure implementations: `lang/evolution.klong`, `lang/engine.bqn` Evolve, `lang/q_
 
 The polygons are symbolic state representations only.
 
-## 8. Type, Shape, Rank and Memory Invariants
+## 11. Type, Shape, Rank and Memory Invariants
 
 - Rank- and shape-indexed arrays in the C engine.
 - Explicit ownership and free paths.
@@ -141,7 +193,7 @@ The polygons are symbolic state representations only.
 
 Agda sketches in `proofs/Array.agda`, `proofs/Type.agda` track shape preservation and refinements. These are not complete machine-checked proofs of the C implementation.
 
-## 9. Geometric Operators and Worked Examples
+## 12. Geometric Operators and Worked Examples
 
 **Normalization (C11 path):**
 ```c
@@ -158,7 +210,7 @@ Unit vector \(x = (1,0,0)\), small tangent \(v = (0,0.1,0)\). Post-condition: fi
 
 Shape errors return NULL or negative codes; they are not silently ignored.
 
-## 10. Compiler Architecture and Language Integration
+## 13. Compiler Architecture and Language Integration
 
 ```
 src/
@@ -178,7 +230,7 @@ docs/                   — grammar, compatibility, operators
 
 The unified syntax and full elaborator are Proposed. The C11 engine and pure language files exist independently.
 
-## 11. Formal Verification and Property Testing
+## 14. Formal Verification and Property Testing
 
 Agda modules (`proofs/Sphere.agda`, `proofs/Operators.agda`) state unit-norm preservation and shape contracts. They are mathematical sketches, not yet connected to the C runtime by extraction or verified compilation.
 
@@ -190,11 +242,11 @@ Distinction:
 - Runtime test: present for sphere exp.
 - Unverified: full SO(n) closure, general GA, optimizer correctness.
 
-## 12. Benchmarks and Reproducible Experiments
+## 15. Benchmarks and Reproducible Experiments
 
 No benchmark numbers are claimed. Reproducible methodology would record interpreter version, hardware, shape, iteration count, and median. Measurements are not yet available.
 
-## 13. Installation, Usage and Contribution
+## 16. Installation, Usage and Contribution
 
 **Build (C11, zero external dependencies beyond libm):**
 ```bash
@@ -208,7 +260,7 @@ Pool is initialized to 1 MiB. Memory report is printed on exit.
 
 Contribution: follow AGPLv3. Preserve deterministic failure modes and shape contracts. Do not introduce network dependencies or hidden state in pure operators.
 
-## 14. References, Glossary and Provenance
+## 17. References, Glossary and Provenance
 
 - Master build prompts are preserved in the repository history and `MASTER_BUILD_PROMPT.md` (when present).
 - License: GNU Affero General Public License v3 (`LICENSE`).
