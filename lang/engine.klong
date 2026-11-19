@@ -1,0 +1,30 @@
+: HERMETIC-Ω pure Klong recursive geometric engine
+: All via native array and functional recursion
+
+.norm {:+/*x}
+.dot {:+/*x'y}
+.normalize {:x/.sqrt(.norm(x))}
+
+.sinc {:[.abs(x)<1e-12;1-(x*x)/6;.sin(x)/x]}
+
+.sphere_exp {
+  x::x; v::y;
+  nv::.sqrt(.norm(v));
+  c::.cos(nv);
+  s::.sinc(nv);
+  (c*x)+(s*v)
+}
+
+.evolve {
+  x::x; v::y; eta::z; fuel::w;
+  :[fuel=0;x;
+    .evolve(.sphere_exp(x;eta*v);v;eta;fuel-1)]
+}
+
+.geodesic {
+  x::x; y::y; t::z;
+  theta::.acos(.dot(x;y));
+  s0::.sin((1-t)*theta);
+  s1::.sin(t*theta);
+  ((s0*x)+(s1*y))/.sin(theta)
+}
