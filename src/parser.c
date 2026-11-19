@@ -2,20 +2,64 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
 
 static Node *make(NodeKind k) {
     Node *n = calloc(1, sizeof(Node));
+    if (!n) return NULL;
     n->kind = k;
     return n;
 }
 
-Node *parse(const char *src) {
-    /* Minimal recursive descent for monadic/dyadic and array literals.
-       Full EBNF from grammar.md to be elaborated. */
-    if (!src || !*src) return NULL;
+static const char *skip_ws(const char *s) {
+    while (*s && isspace((unsigned char)*s)) s++;
+    return s;
+}
+
+static Node *parse_atom(const char **ps) {
+    const char *s = skip_ws(*ps);
+    if (!*s) return NULL;
+    if (*s == '[') {
+        Node *n = make(NODE_ARRAY);
+        s++;
+        size_t cap = 4;
+        n->children = malloc(cap * sizeof(Node*));
+        n->nchildren = 0;
+        while (*s && *s != ']') {
+            s = skip_ws(s);
+            if (*s == ']') break;
+            Node *child = parse_atom(&s);
+            if (!child) break;
+            if (n->nchildren >= cap) {
+                cap *= 2;
+                n->children = realloc(n->children, cap * sizeof(Node*));
+            }
+            n->children[n->nchildren++] = child;
+            s = skip_ws(s);
+            if (*s == ',') s++;
+        }
+        if (*s == ']') s++;
+        *ps = s;
+        return n;
+    }
+    if (isdigit((unsigned char)*s) || *s == '-' || *s == '.') {
+        Node *n = make(NODE_ATOM);
+        n->literal = strtod(s, (char**)&s);
+        *ps = s;
+        return n;
+    }
+    /* glyph or ident */
     Node *n = make(NODE_ATOM);
-    n->glyph = strdup(src);
+    size_t len = 0;
+    while (s[len] && !isspace((unsigned char)s[len]) && s[len] != '[' && s[len] != ']' && s[len] != ',') len++;
+    n->glyph = strndup(s, len);
+    *ps = s + len;
     return n;
+}
+
+Node *parse(const char *src) {
+    const char *s = src;
+    return parse_atom(&s);
 }
 
 void node_free(Node *n) {

@@ -2,6 +2,7 @@
 #define HAO_IR_H
 
 #include "array.h"
+#include "parser.h"
 
 typedef enum {
     IR_LOAD,
@@ -10,7 +11,9 @@ typedef enum {
     IR_PERMUTE,
     IR_EXP,
     IR_DOT,
-    IR_NORM
+    IR_NORM,
+    IR_GEO_PROD,
+    IR_EVOLVE
 } IROp;
 
 typedef struct IRNode {
@@ -24,5 +27,6 @@ typedef struct IRNode {
 
 IRNode *ir_from_node(void *parse_node);
 int ir_eval(IRNode *ir, HaoArray **out);
+void ir_free(IRNode *ir);
 
 #endif
