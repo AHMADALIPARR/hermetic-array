@@ -2,17 +2,17 @@
 #define HAO_GEOM_H
 
 #include "array.h"
+#include <stdbool.h>
 
-/* Geometric product for multivectors (simplified 3D) */
+double hao_norm2(const double *v, size_t n);
+double hao_dot(const double *a, const double *b, size_t n);
+void hao_sphere_exp(const double *x, const double *v, double *out, size_t n);
+bool hao_is_unit(const double *x, size_t n, double tol);
+bool hao_is_tangent(const double *x, const double *v, size_t n, double tol);
+int hao_array_sphere_exp(HaoArray *x, HaoArray *v, HaoArray *out);
 int hao_geometric_product(const HaoArray *a, const HaoArray *b, HaoArray **out);
-
-/* Exterior product */
 int hao_exterior(const HaoArray *a, const HaoArray *b, HaoArray **out);
-
-/* Rotor sandwich */
 int hao_sandwich(const HaoArray *rotor, const HaoArray *vec, HaoArray **out);
-
-/* Group action on points */
 int hao_group_act(const HaoArray *g, const HaoArray *x, HaoArray **out);
 
 #endif
