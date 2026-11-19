@@ -7,13 +7,16 @@
 #include <string.h>
 
 int main(int argc, char **argv) {
+    hao_pool_init(1 << 20); /* 1 MiB pool */
     if (argc < 2) {
         fprintf(stderr, "usage: hao <expr>\n");
+        hao_pool_free();
         return 1;
     }
     Node *tree = parse(argv[1]);
     if (!tree) {
         fprintf(stderr, "parse failed\n");
+        hao_pool_free();
         return 1;
     }
     IRNode *ir = ir_from_node(tree);
@@ -25,5 +28,6 @@ int main(int argc, char **argv) {
     node_free(tree);
     free(ir);
     hao_memory_report();
+    hao_pool_free();
     return 0;
 }
