@@ -1,0 +1,18 @@
+: HERMETIC-Ω recursive geometric evolution in Klong
+: Bounded by fuel
+
+.evolve_sphere {
+  x::x;
+  v::y;
+  eta::z;
+  fuel::w;
+  :[fuel=0; x;
+    .evolve_sphere(.sphere_exp(x;eta*v);v;eta;fuel-1)]
+}
+
+.geodesic_chain {
+  points::x;
+  steps::y;
+  # Interpolate successive
+  points
+}
