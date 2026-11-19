@@ -1,3 +1,20 @@
+/* HERMETIC ARRAY Ω (HAΩ)
+ * Copyright (C) 2026 AHMAD ALI PARR
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "array.h"
 #include <stdlib.h>
 #include <string.h>
@@ -11,21 +28,23 @@ HaoPool hao_pool = {0};
 
 void hao_pool_init(size_t capacity) {
     if (hao_pool.base) free(hao_pool.base);
-    hao_pool.base = malloc(capacity);
-    hao_pool.capacity = capacity;
+    size_t aligned_cap = (capacity + HAO_CACHE_LINE - 1) & ~(HAO_CACHE_LINE - 1);
+    hao_pool.base = aligned_alloc(HAO_CACHE_LINE, aligned_cap);
+    hao_pool.capacity = aligned_cap;
     hao_pool.used = 0;
     hao_pool.peak = 0;
     if (hao_pool.base) {
-        hao_total_bytes += capacity;
+        hao_total_bytes += aligned_cap;
         hao_alloc_count++;
         if (hao_total_bytes > hao_peak_bytes) hao_peak_bytes = hao_total_bytes;
     }
 }
 
 void *hao_pool_alloc(size_t bytes) {
-    if (!hao_pool.base || hao_pool.used + bytes > hao_pool.capacity) return NULL;
+    size_t aligned = (bytes + HAO_CACHE_LINE - 1) & ~(HAO_CACHE_LINE - 1);
+    if (!hao_pool.base || hao_pool.used + aligned > hao_pool.capacity) return NULL;
     void *p = hao_pool.base + hao_pool.used;
-    hao_pool.used += bytes;
+    hao_pool.used += aligned;
     if (hao_pool.used > hao_pool.peak) hao_pool.peak = hao_pool.used;
     return p;
 }
@@ -88,10 +107,12 @@ HaoArray *hao_array_create(HaoScalarType type, size_t rank, const size_t *shape)
     a->element_count = count;
     a->bytes = count * es;
     if (count > 0) {
-        a->data = hao_pool_alloc(a->bytes);
-        if (!a->data) a->data = calloc(count, es);
+        size_t aligned_bytes = (a->bytes + HAO_CACHE_LINE - 1) & ~(HAO_CACHE_LINE - 1);
+        a->data = hao_pool_alloc(aligned_bytes);
+        if (!a->data) a->data = aligned_alloc(HAO_CACHE_LINE, aligned_bytes);
         if (!a->data) { hao_array_free(a); return NULL; }
-        if (a->data != hao_pool.base + (hao_pool.used - a->bytes)) account_alloc(a->bytes);
+        if (a->data < hao_pool.base || a->data >= hao_pool.base + hao_pool.capacity) account_alloc(aligned_bytes);
+        a->bytes = aligned_bytes;
     }
     if (rank > 0) {
         size_t stride = 1;
@@ -108,7 +129,7 @@ void hao_array_free(HaoArray *a) {
     if (a->owned) {
         if (a->shape) { account_free(a->rank * sizeof(size_t)); free(a->shape); }
         if (a->strides) { account_free(a->rank * sizeof(size_t)); free(a->strides); }
-        if (a->data && a->data < hao_pool.base || a->data >= hao_pool.base + hao_pool.capacity) {
+        if (a->data && (a->data < hao_pool.base || a->data >= hao_pool.base + hao_pool.capacity)) {
             account_free(a->bytes);
             free(a->data);
         }
@@ -138,7 +159,7 @@ HaoArray *hao_reshape(HaoArray *a, size_t rank, const size_t *new_shape) {
     if (new_count != a->element_count) return NULL;
     HaoArray *r = hao_array_create(a->type, rank, new_shape);
     if (!r) return NULL;
-    if (a->element_count > 0) memcpy(r->data, a->data, a->bytes);
+    if (a->element_count > 0) memcpy(r->data, a->data, a->element_count * hao_array_element_size(a->type));
     return r;
 }
 
@@ -275,7 +296,7 @@ int hao_evolve_sphere(HaoArray *x, HaoArray *v, double eta, size_t steps, HaoArr
     if (fabs(xn2 - 1.0) > 1e-8 || fabs(dot) > 1e-8) return -3;
     *out = hao_array_create(x->type, x->rank, x->shape);
     if (!*out) return -1;
-    memcpy((*out)->data, x->data, x->bytes);
+    memcpy((*out)->data, x->data, x->element_count * sizeof(double));
     double *xd = (*out)->data;
     const double *vd = v->data;
     for (size_t s = 0; s < steps; s++) {
