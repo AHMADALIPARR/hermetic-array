@@ -6,15 +6,21 @@
 
 double hao_norm2(const double *v, size_t n) {
     double s = 0.0;
-    const double *end = v + n;
-    for (; v < end; v++) s += (*v) * (*v);
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        s += v[i]*v[i] + v[i+1]*v[i+1] + v[i+2]*v[i+2] + v[i+3]*v[i+3];
+    }
+    for (; i < n; i++) s += v[i] * v[i];
     return s;
 }
 
 double hao_dot(const double *a, const double *b, size_t n) {
     double s = 0.0;
-    const double *ae = a + n;
-    for (; a < ae; a++, b++) s += (*a) * (*b);
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        s += a[i]*b[i] + a[i+1]*b[i+1] + a[i+2]*b[i+2] + a[i+3]*b[i+3];
+    }
+    for (; i < n; i++) s += a[i] * b[i];
     return s;
 }
 
@@ -28,8 +34,14 @@ void hao_sphere_exp(const double *x, const double *v, double *out, size_t n) {
     double nv = sqrt(nv2);
     double c = cos(nv);
     double s = hao_sinc(nv);
-    const double *xe = x + n;
-    for (; x < xe; x++, v++, out++) *out = c * (*x) + s * (*v);
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        out[i]   = c * x[i]   + s * v[i];
+        out[i+1] = c * x[i+1] + s * v[i+1];
+        out[i+2] = c * x[i+2] + s * v[i+2];
+        out[i+3] = c * x[i+3] + s * v[i+3];
+    }
+    for (; i < n; i++) out[i] = c * x[i] + s * v[i];
 }
 
 bool hao_is_unit(const double *x, size_t n, double tol) {
@@ -46,7 +58,9 @@ bool hao_is_orthogonal(const double *Q, size_t n, double tol) {
             double d = 0.0;
             const double *qi = Q + i * n;
             const double *qj = Q + j * n;
-            for (size_t k = 0; k < n; k++) d += qi[k] * qj[k];
+            size_t k = 0;
+            for (; k + 3 < n; k += 4) d += qi[k]*qj[k] + qi[k+1]*qj[k+1] + qi[k+2]*qj[k+2] + qi[k+3]*qj[k+3];
+            for (; k < n; k++) d += qi[k] * qj[k];
             double expected = (i == j) ? 1.0 : 0.0;
             if (fabs(d - expected) > tol) return false;
         }
@@ -86,8 +100,9 @@ int hao_geometric_product(const HaoArray *a, const HaoArray *b, HaoArray **out) 
     double *ad = a->data, *bd = b->data, *od = (*out)->data;
     size_t n = a->element_count;
     double s = 0.0;
-    const double *ae = ad + n;
-    for (; ad < ae; ad++, bd++) s += (*ad) * (*bd);
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) s += ad[i]*bd[i] + ad[i+1]*bd[i+1] + ad[i+2]*bd[i+2] + ad[i+3]*bd[i+3];
+    for (; i < n; i++) s += ad[i] * bd[i];
     od[0] = s;
     if (n >= 3) {
         od[1] = ad[1]*bd[2] - ad[2]*bd[1];
@@ -134,8 +149,14 @@ int hao_geodesic(const HaoArray *x, const HaoArray *y, double t, HaoArray **out)
     double s = sin(theta);
     double a = sin((1.0 - t) * theta) / s;
     double b = sin(t * theta) / s;
-    const double *xe = xd + n;
-    for (; xd < xe; xd++, yd++, od++) *od = a * (*xd) + b * (*yd);
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        od[i]   = a * xd[i]   + b * yd[i];
+        od[i+1] = a * xd[i+1] + b * yd[i+1];
+        od[i+2] = a * xd[i+2] + b * yd[i+2];
+        od[i+3] = a * xd[i+3] + b * yd[i+3];
+    }
+    for (; i < n; i++) od[i] = a * xd[i] + b * yd[i];
     return 0;
 }
 
