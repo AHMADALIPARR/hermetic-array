@@ -9,10 +9,15 @@ double hao_dot(const double *a, const double *b, size_t n);
 void hao_sphere_exp(const double *x, const double *v, double *out, size_t n);
 bool hao_is_unit(const double *x, size_t n, double tol);
 bool hao_is_tangent(const double *x, const double *v, size_t n, double tol);
+bool hao_is_orthogonal(const double *Q, size_t n, double tol);
+bool hao_is_rotation(const double *Q, size_t n, double tol);
 int hao_array_sphere_exp(HaoArray *x, HaoArray *v, HaoArray *out);
 int hao_geometric_product(const HaoArray *a, const HaoArray *b, HaoArray **out);
 int hao_exterior(const HaoArray *a, const HaoArray *b, HaoArray **out);
 int hao_sandwich(const HaoArray *rotor, const HaoArray *vec, HaoArray **out);
 int hao_group_act(const HaoArray *g, const HaoArray *x, HaoArray **out);
+int hao_geodesic(const HaoArray *x, const HaoArray *y, double t, HaoArray **out);
+int hao_quat_mul(const double q1[4], const double q2[4], double out[4]);
+int hao_quat_rotate(const double q[4], const double v[3], double out[3]);
 
 #endif

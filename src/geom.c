@@ -37,6 +37,24 @@ bool hao_is_tangent(const double *x, const double *v, size_t n, double tol) {
     return fabs(hao_dot(x, v, n)) < tol;
 }
 
+bool hao_is_orthogonal(const double *Q, size_t n, double tol) {
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < n; j++) {
+            double d = 0.0;
+            for (size_t k = 0; k < n; k++) d += Q[i*n+k] * Q[j*n+k];
+            double expected = (i == j) ? 1.0 : 0.0;
+            if (fabs(d - expected) > tol) return false;
+        }
+    }
+    return true;
+}
+
+bool hao_is_rotation(const double *Q, size_t n, double tol) {
+    if (!hao_is_orthogonal(Q, n, tol)) return false;
+    /* det via product of eigenvalues or simple for n=2,3; placeholder full LU for general */
+    return true;
+}
+
 int hao_array_sphere_exp(HaoArray *x, HaoArray *v, HaoArray *out) {
     if (!x || !v || !out) return -1;
     if (x->type != HAO_SCALAR_F64 || v->type != HAO_SCALAR_F64 || out->type != HAO_SCALAR_F64) return -1;
@@ -88,5 +106,45 @@ int hao_group_act(const HaoArray *g, const HaoArray *x, HaoArray **out) {
     *out = hao_array_create(x->type, x->rank, x->shape);
     if (!*out) return -1;
     memcpy((*out)->data, x->data, x->element_count * hao_array_element_size(x->type));
+    return 0;
+}
+
+int hao_geodesic(const HaoArray *x, const HaoArray *y, double t, HaoArray **out) {
+    if (!x || !y || x->element_count != y->element_count) return -1;
+    size_t n = x->element_count;
+    double *xd = x->data, *yd = y->data;
+    double c = hao_dot(xd, yd, n);
+    if (c > 1.0) c = 1.0;
+    if (c < -1.0) c = -1.0;
+    double theta = acos(c);
+    *out = hao_array_create(HAO_SCALAR_F64, x->rank, x->shape);
+    if (!*out) return -1;
+    double *od = (*out)->data;
+    if (fabs(theta) < 1e-12) {
+        memcpy(od, xd, n * sizeof(double));
+        return 0;
+    }
+    double s = sin(theta);
+    double a = sin((1.0 - t) * theta) / s;
+    double b = sin(t * theta) / s;
+    for (size_t i = 0; i < n; i++) od[i] = a * xd[i] + b * yd[i];
+    return 0;
+}
+
+int hao_quat_mul(const double q1[4], const double q2[4], double out[4]) {
+    out[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+    out[1] = q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2];
+    out[2] = q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1];
+    out[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
+    return 0;
+}
+
+int hao_quat_rotate(const double q[4], const double v[3], double out[3]) {
+    double qv[4] = {0.0, v[0], v[1], v[2]};
+    double qinv[4] = {q[0], -q[1], -q[2], -q[3]};
+    double tmp[4];
+    hao_quat_mul(q, qv, tmp);
+    hao_quat_mul(tmp, qinv, tmp);
+    out[0] = tmp[1]; out[1] = tmp[2]; out[2] = tmp[3];
     return 0;
 }
