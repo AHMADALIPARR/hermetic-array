@@ -1,9 +1,12 @@
 # Design Documents
 
-## Status
+## Status (loop iteration)
 
-- **Section II (Language Design)**: Canonical EBNF grammar and compatibility table complete.
-- **Section III (Geometric Operators)**: Next.
-- Remaining sections follow the master prompt order.
+- **Section I**: Foundational mathematics (recorded in master prompt)
+- **Section II**: Canonical EBNF grammar + compatibility table ✅
+- **Section III**: Geometric operator inventory skeleton started ✅
+- **Section IV–IX**: Pending (pure geometry, evolution, types, compiler, verification, hermetic build)
 
-See `grammar.md` and `compatibility.md`.
+Next: complete structural and metric operators with full required fields, then type system refinements.
+
+See `grammar.md`, `compatibility.md`, `operators/README.md`.
