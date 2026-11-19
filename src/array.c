@@ -4,6 +4,21 @@
 #include <math.h>
 #include <stdio.h>
 
+size_t hao_total_bytes = 0;
+size_t hao_peak_bytes = 0;
+size_t hao_alloc_count = 0;
+
+static void account_alloc(size_t bytes) {
+    hao_total_bytes += bytes;
+    hao_alloc_count++;
+    if (hao_total_bytes > hao_peak_bytes) hao_peak_bytes = hao_total_bytes;
+}
+
+static void account_free(size_t bytes) {
+    if (hao_total_bytes >= bytes) hao_total_bytes -= bytes;
+    if (hao_alloc_count > 0) hao_alloc_count--;
+}
+
 size_t hao_array_element_size(HaoScalarType t) {
     switch (t) {
         case HAO_SCALAR_F64: return sizeof(double);
@@ -16,6 +31,7 @@ size_t hao_array_element_size(HaoScalarType t) {
 HaoArray *hao_array_create(HaoScalarType type, size_t rank, const size_t *shape) {
     HaoArray *a = calloc(1, sizeof(HaoArray));
     if (!a) return NULL;
+    account_alloc(sizeof(HaoArray));
     a->type = type;
     a->rank = rank;
     a->owned = true;
@@ -23,6 +39,7 @@ HaoArray *hao_array_create(HaoScalarType type, size_t rank, const size_t *shape)
         a->shape = malloc(rank * sizeof(size_t));
         a->strides = malloc(rank * sizeof(size_t));
         if (!a->shape || !a->strides) { hao_array_free(a); return NULL; }
+        account_alloc(rank * sizeof(size_t) * 2);
         memcpy(a->shape, shape, rank * sizeof(size_t));
     }
     size_t es = hao_array_element_size(type);
@@ -32,9 +49,11 @@ HaoArray *hao_array_create(HaoScalarType type, size_t rank, const size_t *shape)
         count *= shape[i];
     }
     a->element_count = count;
+    a->bytes = count * es;
     if (count > 0) {
         a->data = calloc(count, es);
         if (!a->data) { hao_array_free(a); return NULL; }
+        account_alloc(a->bytes);
     }
     if (rank > 0) {
         size_t stride = 1;
@@ -49,17 +68,17 @@ HaoArray *hao_array_create(HaoScalarType type, size_t rank, const size_t *shape)
 void hao_array_free(HaoArray *a) {
     if (!a) return;
     if (a->owned) {
-        free(a->shape);
-        free(a->strides);
-        free(a->data);
+        if (a->shape) { account_free(a->rank * sizeof(size_t)); free(a->shape); }
+        if (a->strides) { account_free(a->rank * sizeof(size_t)); free(a->strides); }
+        if (a->data) { account_free(a->bytes); free(a->data); }
     }
+    account_free(sizeof(HaoArray));
     free(a);
 }
 
 void *hao_array_ptr(HaoArray *a, const size_t *indices) {
     if (!hao_array_check_bounds(a, indices)) return NULL;
-    size_t offset = 0;
-    for (size_t i = 0; i < a->rank; i++) offset += indices[i] * a->strides[i];
+    size_t offset = hao_offset(a, indices);
     return (char *)a->data + offset * hao_array_element_size(a->type);
 }
 
@@ -75,23 +94,20 @@ HaoArray *hao_reshape(HaoArray *a, size_t rank, const size_t *new_shape) {
     if (!a) return NULL;
     size_t new_count = 1;
     for (size_t i = 0; i < rank; i++) new_count *= new_shape[i];
-    if (new_count != a->element_count) return NULL; /* length error */
+    if (new_count != a->element_count) return NULL;
     HaoArray *r = hao_array_create(a->type, rank, new_shape);
     if (!r) return NULL;
     if (a->element_count > 0)
-        memcpy(r->data, a->data, a->element_count * hao_array_element_size(a->type));
+        memcpy(r->data, a->data, a->bytes);
     return r;
 }
 
 static size_t compute_offset(const HaoArray *a, const size_t *idx) {
-    size_t off = 0;
-    for (size_t i = 0; i < a->rank; i++) off += idx[i] * a->strides[i];
-    return off;
+    return hao_offset(a, idx);
 }
 
 int hao_permute_axes(HaoArray *a, const size_t *perm, HaoArray **out) {
     if (!a || !perm || a->rank == 0) return -1;
-    /* Validate perm is a permutation */
     bool seen[32] = {0};
     if (a->rank > 32) return -1;
     for (size_t i = 0; i < a->rank; i++) {
@@ -107,17 +123,17 @@ int hao_permute_axes(HaoArray *a, const size_t *perm, HaoArray **out) {
     size_t es = hao_array_element_size(a->type);
     size_t *idx = calloc(a->rank, sizeof(size_t));
     size_t *new_idx = calloc(a->rank, sizeof(size_t));
+    char *src = (char *)a->data;
+    char *dst = (char *)(*out)->data;
     for (size_t lin = 0; lin < a->element_count; lin++) {
-        /* Convert linear to multi-index for original */
         size_t rem = lin;
         for (int i = (int)a->rank - 1; i >= 0; i--) {
             idx[i] = rem % a->shape[i];
             rem /= a->shape[i];
         }
-        /* Map to new multi-index via inverse perm */
         for (size_t i = 0; i < a->rank; i++) new_idx[perm[i]] = idx[i];
         size_t new_off = compute_offset(*out, new_idx);
-        memcpy((char *)(*out)->data + new_off * es, (char *)a->data + lin * es, es);
+        memcpy(dst + new_off * es, src + lin * es, es);
     }
     free(idx); free(new_idx);
     return 0;
@@ -132,6 +148,8 @@ int hao_rotate(HaoArray *a, int axis, int k, HaoArray **out) {
     int shift = ((k % (int)axis_len) + (int)axis_len) % (int)axis_len;
     size_t es = hao_array_element_size(a->type);
     size_t *idx = calloc(a->rank, sizeof(size_t));
+    char *src = (char *)a->data;
+    char *dst = (char *)(*out)->data;
     for (size_t lin = 0; lin < a->element_count; lin++) {
         size_t rem = lin;
         for (int i = (int)a->rank - 1; i >= 0; i--) {
@@ -140,7 +158,7 @@ int hao_rotate(HaoArray *a, int axis, int k, HaoArray **out) {
         }
         idx[axis] = (idx[axis] + shift) % axis_len;
         size_t new_off = compute_offset(*out, idx);
-        memcpy((char *)(*out)->data + new_off * es, (char *)a->data + lin * es, es);
+        memcpy(dst + new_off * es, src + lin * es, es);
     }
     free(idx);
     return 0;
@@ -184,17 +202,16 @@ HaoArray *hao_normalize(const HaoArray *a) {
 int hao_evolve_sphere(HaoArray *x, HaoArray *v, double eta, size_t steps, HaoArray **out) {
     if (!x || !v || x->type != HAO_SCALAR_F64 || v->type != HAO_SCALAR_F64) return -1;
     if (x->element_count != v->element_count) return -2;
-    /* Precondition checks */
     double xn2 = 0.0, dot = 0.0;
     const double *xd0 = x->data, *vd0 = v->data;
     for (size_t i = 0; i < x->element_count; i++) {
         xn2 += xd0[i] * xd0[i];
         dot += xd0[i] * vd0[i];
     }
-    if (fabs(xn2 - 1.0) > 1e-8 || fabs(dot) > 1e-8) return -3; /* not unit or not tangent */
+    if (fabs(xn2 - 1.0) > 1e-8 || fabs(dot) > 1e-8) return -3;
     *out = hao_array_create(x->type, x->rank, x->shape);
     if (!*out) return -1;
-    memcpy((*out)->data, x->data, x->element_count * sizeof(double));
+    memcpy((*out)->data, x->data, x->bytes);
     double *xd = (*out)->data;
     const double *vd = v->data;
     size_t n = x->element_count;
@@ -209,4 +226,9 @@ int hao_evolve_sphere(HaoArray *x, HaoArray *v, double eta, size_t steps, HaoArr
         }
     }
     return 0;
+}
+
+void hao_memory_report(void) {
+    fprintf(stderr, "HAO memory: current=%zu peak=%zu allocs=%zu\n",
+            hao_total_bytes, hao_peak_bytes, hao_alloc_count);
 }
