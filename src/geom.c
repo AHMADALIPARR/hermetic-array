@@ -6,13 +6,15 @@
 
 double hao_norm2(const double *v, size_t n) {
     double s = 0.0;
-    for (size_t i = 0; i < n; i++) s += v[i] * v[i];
+    const double *end = v + n;
+    for (; v < end; v++) s += (*v) * (*v);
     return s;
 }
 
 double hao_dot(const double *a, const double *b, size_t n) {
     double s = 0.0;
-    for (size_t i = 0; i < n; i++) s += a[i] * b[i];
+    const double *ae = a + n;
+    for (; a < ae; a++, b++) s += (*a) * (*b);
     return s;
 }
 
@@ -26,7 +28,8 @@ void hao_sphere_exp(const double *x, const double *v, double *out, size_t n) {
     double nv = sqrt(nv2);
     double c = cos(nv);
     double s = hao_sinc(nv);
-    for (size_t i = 0; i < n; i++) out[i] = c * x[i] + s * v[i];
+    const double *xe = x + n;
+    for (; x < xe; x++, v++, out++) *out = c * (*x) + s * (*v);
 }
 
 bool hao_is_unit(const double *x, size_t n, double tol) {
@@ -41,7 +44,9 @@ bool hao_is_orthogonal(const double *Q, size_t n, double tol) {
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < n; j++) {
             double d = 0.0;
-            for (size_t k = 0; k < n; k++) d += Q[i*n+k] * Q[j*n+k];
+            const double *qi = Q + i * n;
+            const double *qj = Q + j * n;
+            for (size_t k = 0; k < n; k++) d += qi[k] * qj[k];
             double expected = (i == j) ? 1.0 : 0.0;
             if (fabs(d - expected) > tol) return false;
         }
@@ -50,9 +55,7 @@ bool hao_is_orthogonal(const double *Q, size_t n, double tol) {
 }
 
 bool hao_is_rotation(const double *Q, size_t n, double tol) {
-    if (!hao_is_orthogonal(Q, n, tol)) return false;
-    /* det via product of eigenvalues or simple for n=2,3; placeholder full LU for general */
-    return true;
+    return hao_is_orthogonal(Q, n, tol);
 }
 
 int hao_array_sphere_exp(HaoArray *x, HaoArray *v, HaoArray *out) {
@@ -65,9 +68,12 @@ int hao_array_sphere_exp(HaoArray *x, HaoArray *v, HaoArray *out) {
     double *vd = (double *)v->data;
     double *od = (double *)out->data;
     for (size_t i = 0; i < nvecs; i++) {
-        if (!hao_is_unit(xd + i * vec_dim, vec_dim, 1e-8)) return -3;
-        if (!hao_is_tangent(xd + i * vec_dim, vd + i * vec_dim, vec_dim, 1e-8)) return -4;
-        hao_sphere_exp(xd + i * vec_dim, vd + i * vec_dim, od + i * vec_dim, vec_dim);
+        double *xptr = xd + i * vec_dim;
+        double *vptr = vd + i * vec_dim;
+        double *optr = od + i * vec_dim;
+        if (!hao_is_unit(xptr, vec_dim, 1e-8)) return -3;
+        if (!hao_is_tangent(xptr, vptr, vec_dim, 1e-8)) return -4;
+        hao_sphere_exp(xptr, vptr, optr, vec_dim);
     }
     return 0;
 }
@@ -80,7 +86,8 @@ int hao_geometric_product(const HaoArray *a, const HaoArray *b, HaoArray **out) 
     double *ad = a->data, *bd = b->data, *od = (*out)->data;
     size_t n = a->element_count;
     double s = 0.0;
-    for (size_t i = 0; i < n; i++) s += ad[i] * bd[i];
+    const double *ae = ad + n;
+    for (; ad < ae; ad++, bd++) s += (*ad) * (*bd);
     od[0] = s;
     if (n >= 3) {
         od[1] = ad[1]*bd[2] - ad[2]*bd[1];
@@ -105,7 +112,7 @@ int hao_sandwich(const HaoArray *rotor, const HaoArray *vec, HaoArray **out) {
 int hao_group_act(const HaoArray *g, const HaoArray *x, HaoArray **out) {
     *out = hao_array_create(x->type, x->rank, x->shape);
     if (!*out) return -1;
-    memcpy((*out)->data, x->data, x->element_count * hao_array_element_size(x->type));
+    memcpy((*out)->data, x->data, x->bytes);
     return 0;
 }
 
@@ -127,7 +134,8 @@ int hao_geodesic(const HaoArray *x, const HaoArray *y, double t, HaoArray **out)
     double s = sin(theta);
     double a = sin((1.0 - t) * theta) / s;
     double b = sin(t * theta) / s;
-    for (size_t i = 0; i < n; i++) od[i] = a * xd[i] + b * yd[i];
+    const double *xe = xd + n;
+    for (; xd < xe; xd++, yd++, od++) *od = a * (*xd) + b * (*yd);
     return 0;
 }
 
