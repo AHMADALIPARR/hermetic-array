@@ -1,9 +1,29 @@
+/* HERMETIC ARRAY Ω (HAΩ)
+ * Copyright (C) 2026 AHMAD ALI PARR
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef HAO_ARRAY_H
 #define HAO_ARRAY_H
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdalign.h>
+
+#define HAO_CACHE_LINE 64
 
 typedef enum {
     HAO_SCALAR_F64,
@@ -23,9 +43,8 @@ typedef struct {
     size_t alloc_count;
 } HaoArray;
 
-/* Memory pool (bump allocator, zero-dep) */
 typedef struct {
-    char *base;
+    alignas(HAO_CACHE_LINE) char *base;
     size_t capacity;
     size_t used;
     size_t peak;
@@ -54,7 +73,6 @@ static inline size_t hao_offset(const HaoArray *a, const size_t *idx) {
     return off;
 }
 
-/* SIMD-style 4-wide pointer advance helpers */
 static inline void hao_vec4_add_mul(double *out, const double *a, const double *b, double s, size_t n) {
     size_t i = 0;
     for (; i + 3 < n; i += 4) {
