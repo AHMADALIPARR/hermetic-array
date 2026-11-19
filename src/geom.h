@@ -2,17 +2,17 @@
 #define HAO_GEOM_H
 
 #include "array.h"
-#include <math.h>
 
-/* Unit sphere exponential map: Exp_x(v) = cos(||v||) x + sinc(||v||) v
-   Requires ||x|| == 1 and v tangent (x·v == 0). Continuous at 0. */
-double hao_norm2(const double *v, size_t n);
-double hao_dot(const double *a, const double *b, size_t n);
-void hao_sphere_exp(const double *x, const double *v, double *out, size_t n);
-bool hao_is_unit(const double *x, size_t n, double tol);
-bool hao_is_tangent(const double *x, const double *v, size_t n, double tol);
+/* Geometric product for multivectors (simplified 3D) */
+int hao_geometric_product(const HaoArray *a, const HaoArray *b, HaoArray **out);
 
-/* Array versions operate on last axis as vector dimension */
-int hao_array_sphere_exp(HaoArray *x, HaoArray *v, HaoArray *out);
+/* Exterior product */
+int hao_exterior(const HaoArray *a, const HaoArray *b, HaoArray **out);
+
+/* Rotor sandwich */
+int hao_sandwich(const HaoArray *rotor, const HaoArray *vec, HaoArray **out);
+
+/* Group action on points */
+int hao_group_act(const HaoArray *g, const HaoArray *x, HaoArray **out);
 
 #endif
