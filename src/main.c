@@ -24,5 +24,6 @@ int main(int argc, char **argv) {
     }
     node_free(tree);
     free(ir);
+    hao_memory_report();
     return 0;
 }
