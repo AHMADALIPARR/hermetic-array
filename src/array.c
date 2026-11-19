@@ -7,6 +7,43 @@
 size_t hao_total_bytes = 0;
 size_t hao_peak_bytes = 0;
 size_t hao_alloc_count = 0;
+HaoPool hao_pool = {0};
+
+void hao_pool_init(size_t capacity) {
+    if (hao_pool.base) free(hao_pool.base);
+    hao_pool.base = malloc(capacity);
+    hao_pool.capacity = capacity;
+    hao_pool.used = 0;
+    hao_pool.peak = 0;
+    if (hao_pool.base) {
+        hao_total_bytes += capacity;
+        hao_alloc_count++;
+        if (hao_total_bytes > hao_peak_bytes) hao_peak_bytes = hao_total_bytes;
+    }
+}
+
+void *hao_pool_alloc(size_t bytes) {
+    if (!hao_pool.base || hao_pool.used + bytes > hao_pool.capacity) return NULL;
+    void *p = hao_pool.base + hao_pool.used;
+    hao_pool.used += bytes;
+    if (hao_pool.used > hao_pool.peak) hao_pool.peak = hao_pool.used;
+    return p;
+}
+
+void hao_pool_reset(void) {
+    hao_pool.used = 0;
+}
+
+void hao_pool_free(void) {
+    if (hao_pool.base) {
+        hao_total_bytes -= hao_pool.capacity;
+        hao_alloc_count--;
+        free(hao_pool.base);
+        hao_pool.base = NULL;
+        hao_pool.capacity = 0;
+        hao_pool.used = 0;
+    }
+}
 
 static void account_alloc(size_t bytes) {
     hao_total_bytes += bytes;
@@ -51,9 +88,10 @@ HaoArray *hao_array_create(HaoScalarType type, size_t rank, const size_t *shape)
     a->element_count = count;
     a->bytes = count * es;
     if (count > 0) {
-        a->data = calloc(count, es);
+        a->data = hao_pool_alloc(a->bytes);
+        if (!a->data) a->data = calloc(count, es);
         if (!a->data) { hao_array_free(a); return NULL; }
-        account_alloc(a->bytes);
+        if (a->data != hao_pool.base + (hao_pool.used - a->bytes)) account_alloc(a->bytes);
     }
     if (rank > 0) {
         size_t stride = 1;
@@ -70,7 +108,10 @@ void hao_array_free(HaoArray *a) {
     if (a->owned) {
         if (a->shape) { account_free(a->rank * sizeof(size_t)); free(a->shape); }
         if (a->strides) { account_free(a->rank * sizeof(size_t)); free(a->strides); }
-        if (a->data) { account_free(a->bytes); free(a->data); }
+        if (a->data && a->data < hao_pool.base || a->data >= hao_pool.base + hao_pool.capacity) {
+            account_free(a->bytes);
+            free(a->data);
+        }
     }
     account_free(sizeof(HaoArray));
     free(a);
@@ -97,8 +138,7 @@ HaoArray *hao_reshape(HaoArray *a, size_t rank, const size_t *new_shape) {
     if (new_count != a->element_count) return NULL;
     HaoArray *r = hao_array_create(a->type, rank, new_shape);
     if (!r) return NULL;
-    if (a->element_count > 0)
-        memcpy(r->data, a->data, a->bytes);
+    if (a->element_count > 0) memcpy(r->data, a->data, a->bytes);
     return r;
 }
 
@@ -168,7 +208,12 @@ double hao_inner(const HaoArray *a, const HaoArray *b) {
     if (!a || !b || a->type != HAO_SCALAR_F64 || b->type != HAO_SCALAR_F64 || a->element_count != b->element_count) return NAN;
     double s = 0.0;
     const double *ad = a->data, *bd = b->data;
-    for (size_t i = 0; i < a->element_count; i++) s += ad[i] * bd[i];
+    size_t n = a->element_count;
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        s += ad[i]*bd[i] + ad[i+1]*bd[i+1] + ad[i+2]*bd[i+2] + ad[i+3]*bd[i+3];
+    }
+    for (; i < n; i++) s += ad[i] * bd[i];
     return s;
 }
 
@@ -179,7 +224,12 @@ HaoArray *hao_norm(const HaoArray *a) {
     if (!n) return NULL;
     double s = 0.0;
     const double *d = a->data;
-    for (size_t i = 0; i < a->element_count; i++) s += d[i] * d[i];
+    size_t m = a->element_count;
+    size_t i = 0;
+    for (; i + 3 < m; i += 4) {
+        s += d[i]*d[i] + d[i+1]*d[i+1] + d[i+2]*d[i+2] + d[i+3]*d[i+3];
+    }
+    for (; i < m; i++) s += d[i] * d[i];
     ((double *)n->data)[0] = sqrt(s);
     return n;
 }
@@ -195,7 +245,15 @@ HaoArray *hao_normalize(const HaoArray *a) {
     if (!out) return NULL;
     const double *ad = a->data;
     double *od = out->data;
-    for (size_t i = 0; i < a->element_count; i++) od[i] = ad[i] / nv;
+    size_t n = a->element_count;
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        od[i] = ad[i] / nv;
+        od[i+1] = ad[i+1] / nv;
+        od[i+2] = ad[i+2] / nv;
+        od[i+3] = ad[i+3] / nv;
+    }
+    for (; i < n; i++) od[i] = ad[i] / nv;
     return out;
 }
 
@@ -204,7 +262,13 @@ int hao_evolve_sphere(HaoArray *x, HaoArray *v, double eta, size_t steps, HaoArr
     if (x->element_count != v->element_count) return -2;
     double xn2 = 0.0, dot = 0.0;
     const double *xd0 = x->data, *vd0 = v->data;
-    for (size_t i = 0; i < x->element_count; i++) {
+    size_t n = x->element_count;
+    size_t i = 0;
+    for (; i + 3 < n; i += 4) {
+        xn2 += xd0[i]*xd0[i] + xd0[i+1]*xd0[i+1] + xd0[i+2]*xd0[i+2] + xd0[i+3]*xd0[i+3];
+        dot += xd0[i]*vd0[i] + xd0[i+1]*vd0[i+1] + xd0[i+2]*vd0[i+2] + xd0[i+3]*vd0[i+3];
+    }
+    for (; i < n; i++) {
         xn2 += xd0[i] * xd0[i];
         dot += xd0[i] * vd0[i];
     }
@@ -214,21 +278,27 @@ int hao_evolve_sphere(HaoArray *x, HaoArray *v, double eta, size_t steps, HaoArr
     memcpy((*out)->data, x->data, x->bytes);
     double *xd = (*out)->data;
     const double *vd = v->data;
-    size_t n = x->element_count;
     for (size_t s = 0; s < steps; s++) {
         double nv2 = 0.0;
-        for (size_t i = 0; i < n; i++) nv2 += vd[i] * vd[i];
+        i = 0;
+        for (; i + 3 < n; i += 4) nv2 += vd[i]*vd[i] + vd[i+1]*vd[i+1] + vd[i+2]*vd[i+2] + vd[i+3]*vd[i+3];
+        for (; i < n; i++) nv2 += vd[i] * vd[i];
         double nv = sqrt(nv2) * fabs(eta);
         double c = cos(nv);
         double sincv = (fabs(nv) < 1e-12) ? 1.0 - nv*nv/6.0 : sin(nv)/nv;
-        for (size_t i = 0; i < n; i++) {
-            xd[i] = c * xd[i] + sincv * (vd[i] * eta);
+        i = 0;
+        for (; i + 3 < n; i += 4) {
+            xd[i]   = c * xd[i]   + sincv * (vd[i]   * eta);
+            xd[i+1] = c * xd[i+1] + sincv * (vd[i+1] * eta);
+            xd[i+2] = c * xd[i+2] + sincv * (vd[i+2] * eta);
+            xd[i+3] = c * xd[i+3] + sincv * (vd[i+3] * eta);
         }
+        for (; i < n; i++) xd[i] = c * xd[i] + sincv * (vd[i] * eta);
     }
     return 0;
 }
 
 void hao_memory_report(void) {
-    fprintf(stderr, "HAO memory: current=%zu peak=%zu allocs=%zu\n",
-            hao_total_bytes, hao_peak_bytes, hao_alloc_count);
+    fprintf(stderr, "HAO memory: current=%zu peak=%zu allocs=%zu pool_used=%zu pool_peak=%zu\n",
+            hao_total_bytes, hao_peak_bytes, hao_alloc_count, hao_pool.used, hao_pool.peak);
 }
