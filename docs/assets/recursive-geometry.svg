@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="380" viewBox="0 0 1100 380">
+  <title>Recursive Geometric Transformation</title>
+  <rect width="1100" height="380" rx="18" fill="#080C18"/>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0 0 L9 3 L0 6 Z" fill="#59E1EE"/>
+    </marker>
+  </defs>
+  <g fill="none" stroke="#7659FF" stroke-width="2">
+    <circle cx="180" cy="170" r="83"/>
+    <circle cx="550" cy="170" r="83"/>
+    <circle cx="920" cy="170" r="83"/>
+  </g>
+  <g stroke="#59E1EE" stroke-width="2" fill="none">
+    <path d="M180 87 L253 208 L107 208 Z"/>
+    <path d="M550 87 L630 145 L600 237 L500 237 L470 145 Z"/>
+    <path d="M920 87 L996 132 L996 209 L920 253 L844 209 L844 132 Z"/>
+    <path d="M275 170 H445" marker-end="url(#arrow)"/>
+    <path d="M645 170 H815" marker-end="url(#arrow)"/>
+  </g>
+  <g font-family="monospace" text-anchor="middle" fill="#EAF0FF">
+    <text x="180" y="295" font-size="24">G₀</text>
+    <text x="550" y="295" font-size="24">G₁</text>
+    <text x="920" y="295" font-size="24">G₂</text>
+    <text x="360" y="145" font-size="21">Φ</text>
+    <text x="730" y="145" font-size="21">Φ</text>
+    <text x="550" y="348" font-size="21" fill="#F0CA79">Gₙ₊₁ = Φ(Gₙ)</text>
+  </g>
+</svg>

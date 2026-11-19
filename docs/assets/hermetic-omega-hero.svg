@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-labelledby="title desc">
+  <title id="title">HERMETIC-Ω — Universal Geometric Array Language</title>
+  <desc id="desc">Five array-language traditions surrounding a central geometric transformation structure.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1">
+      <stop offset="0%" stop-color="#080C18"/>
+      <stop offset="100%" stop-color="#171A3A"/>
+    </linearGradient>
+    <linearGradient id="energy" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7659FF"/>
+      <stop offset="100%" stop-color="#59E1EE"/>
+    </linearGradient>
+    <radialGradient id="core">
+      <stop offset="0%" stop-color="#7659FF" stop-opacity=".25"/>
+      <stop offset="100%" stop-color="#7659FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1400" height="560" fill="url(#bg)"/>
+  <g transform="translate(700 242)">
+    <circle r="220" fill="url(#core)"/>
+    <circle r="165" fill="none" stroke="#7659FF" stroke-opacity=".4"/>
+    <circle r="119" fill="none" stroke="#59E1EE" stroke-opacity=".5"/>
+    <ellipse rx="168" ry="61" transform="rotate(35)" fill="none" stroke="#59E1EE" stroke-width="1.5"/>
+    <ellipse rx="168" ry="61" transform="rotate(-35)" fill="none" stroke="#7659FF" stroke-width="1.5"/>
+    <g stroke="url(#energy)" stroke-width="2" fill="none">
+      <path d="M0 -140 L133 -43 L82 113 L-82 113 L-133 -43 Z"/>
+      <path d="M0 -140 L82 113 L-133 -43 L133 -43 L-82 113 Z"/>
+      <path d="M0 -140 L0 140 M-133 -43 L133 43 M133 -43 L-133 43"/>
+    </g>
+    <circle r="10" fill="#F0CA79"/>
+  </g>
+  <g fill="#EAF0FF" font-family="monospace" font-size="26" text-anchor="middle">
+    <text x="385" y="125">BQN</text>
+    <text x="1015" y="125">APL</text>
+    <text x="345" y="295">J</text>
+    <text x="1055" y="295">Q/K</text>
+    <text x="700" y="455">KLONG</text>
+  </g>
+  <text x="700" y="72" text-anchor="middle" font-family="sans-serif" font-size="44" font-weight="700" fill="#EAF0FF">HERMETIC-Ω</text>
+  <text x="700" y="520" text-anchor="middle" font-family="monospace" font-size="19" fill="#8E9BB5">ONE GEOMETRY · FIVE ARRAY TRADITIONS</text>
+</svg>

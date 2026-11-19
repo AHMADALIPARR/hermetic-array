@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <title>HERMETIC-Ω Native Array Architecture</title>
+  <desc>Actual and proposed components of the geometric array system.</desc>
+  <rect width="1200" height="700" fill="#080C18"/>
+  <g font-family="monospace" fill="#EAF0FF" text-anchor="middle">
+    <rect x="450" y="30" width="300" height="50" rx="8" fill="#171A3A" stroke="#7659FF"/>
+    <text x="600" y="60" font-size="18">HERMETIC-Ω Unified Syntax (Proposed)</text>
+    <rect x="450" y="110" width="300" height="40" rx="8" fill="#171A3A" stroke="#59E1EE"/>
+    <text x="600" y="135" font-size="16">Formal Grammar (docs/grammar.md)</text>
+    <rect x="450" y="180" width="300" height="40" rx="8" fill="#171A3A" stroke="#59E1EE"/>
+    <text x="600" y="205" font-size="16">Typed Array IR (src/ir.c — partial)</text>
+    <rect x="450" y="250" width="300" height="40" rx="8" fill="#171A3A" stroke="#59E1EE"/>
+    <text x="600" y="275" font-size="16">Shape/Rank Rules (src/array.c)</text>
+    <rect x="400" y="320" width="400" height="40" rx="8" fill="#171A3A" stroke="#F0CA79"/>
+    <text x="600" y="345" font-size="16">Geometric Operations (src/geom.c + lang/)</text>
+    <text x="200" y="420" font-size="16">BQN</text>
+    <text x="400" y="420" font-size="16">APL</text>
+    <text x="600" y="420" font-size="16">J</text>
+    <text x="800" y="420" font-size="16">Q/K</text>
+    <text x="1000" y="420" font-size="16">Klong</text>
+    <rect x="350" y="480" width="500" height="40" rx="8" fill="#171A3A" stroke="#59E1EE"/>
+    <text x="600" y="505" font-size="16">Native Array Evaluation (lang/ pure + src/ C11 engine)</text>
+    <rect x="400" y="560" width="400" height="40" rx="8" fill="#171A3A" stroke="#F0CA79"/>
+    <text x="600" y="585" font-size="16">Verified Results (proofs/ Agda — partial)</text>
+  </g>
+  <g stroke="#59E1EE" stroke-width="1.5" fill="none">
+    <path d="M600 80 V110"/>
+    <path d="M600 150 V180"/>
+    <path d="M600 220 V250"/>
+    <path d="M600 290 V320"/>
+    <path d="M600 360 V400"/>
+    <path d="M200 440 V470"/>
+    <path d="M400 440 V470"/>
+    <path d="M600 440 V470"/>
+    <path d="M800 440 V470"/>
+    <path d="M1000 440 V470"/>
+    <path d="M600 520 V560"/>
+  </g>
+</svg>
