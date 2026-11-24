@@ -1,0 +1,100 @@
+# HERMETIC ARRAY Ω (HAΩ) release pipeline.
+# On a v* tag: build hao and hao-bqn with GCC and CompCert, run the full
+# check with both, and publish a GitHub release carrying the binaries and a
+# source tarball. Pull requests and manual runs execute the same build as a
+# dry run and keep the assets as workflow artifacts instead of publishing.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: gcc
+            cc: gcc-14
+          - name: compcert
+            cc: /opt/compcert/bin/ccomp
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare CompCert prefix
+        if: matrix.name == 'compcert'
+        run: sudo mkdir -p /opt/compcert && sudo chown "$USER" /opt/compcert
+      - name: Cache CompCert
+        if: matrix.name == 'compcert'
+        id: compcert-cache
+        uses: actions/cache@v4
+        with:
+          path: /opt/compcert
+          key: compcert-v3.18-ubuntu-24.04-coq8.18
+      - name: Install Coq, OCaml, Menhir
+        if: matrix.name == 'compcert' && steps.compcert-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends coq ocaml ocaml-findlib menhir libmenhir-ocaml-dev
+      - name: Build CompCert from source
+        if: matrix.name == 'compcert' && steps.compcert-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch v3.18 https://github.com/AbsInt/CompCert.git compcert-src
+          cd compcert-src
+          ./configure -prefix /opt/compcert x86_64-linux
+          make -j"$(nproc)" all
+          make install
+      - name: Build and check
+        run: make -f Makefile.ext CC=${{ matrix.cc }} check
+      - name: Package binaries
+        run: |
+          name=${{ matrix.name }}
+          bindir=bin-$(basename ${{ matrix.cc }})
+          ver=${GITHUB_REF_NAME//\//-}
+          mkdir -p dist
+          tar -czf dist/hermetic-array-$ver-linux-x86_64-$name.tar.gz -C "$bindir" hao hao-bqn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.name }}
+          path: dist/*.tar.gz
+
+  publish:
+    name: publish release
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Source tarball
+        run: |
+          ver=${GITHUB_REF_NAME//\//-}
+          git archive --format=tar.gz --prefix=hermetic-array-$ver/ -o dist/hermetic-array-$ver-src.tar.gz HEAD
+          (cd dist && sha256sum *.tar.gz > SHA256SUMS)
+          ls -l dist
+          cat dist/SHA256SUMS
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+      - name: Keep dry-run assets
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dry-run
+          path: dist/

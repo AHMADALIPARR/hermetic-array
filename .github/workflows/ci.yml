@@ -1,0 +1,100 @@
+# HERMETIC ARRAY Ω (HAΩ) continuous integration.
+# Builds the original sources and the additions with Makefile.ext and runs
+# every C and BQN test with GCC, Clang, ASan/UBSan, and CompCert. The plain-BQN
+# test file is also checked against CBQN as the reference implementation.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.cc }} / make -f Makefile.ext check
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # gcc-14, not the runner's default gcc 13.3: GCC 13.3 at -O2 takes the
+        # wrong branch in join2 (src/interp_prim.c); see the PR #2 notes.
+        cc: [gcc-14, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: ${{ matrix.cc }} --version
+      - name: Build and test
+        run: make -f Makefile.ext CC=${{ matrix.cc }} check
+
+  sanitizers:
+    name: gcc-14 ASan+UBSan / make -f Makefile.ext check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test with sanitizers
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: >
+          make -f Makefile.ext CC=gcc-14 OBJDIR=obj-asan BINDIR=bin-asan
+          CFLAGS="-std=c11 -g -O1 -fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer -D_POSIX_C_SOURCE=200809L -I src"
+          LDFLAGS="-lm -fsanitize=address,undefined"
+          check
+
+  cbqn-reference:
+    name: CBQN reference for plain-BQN tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache CBQN
+        id: cbqn-cache
+        uses: actions/cache@v4
+        with:
+          path: cbqn
+          key: cbqn-2bf102f-ubuntu-24.04
+      - name: Build CBQN
+        if: steps.cbqn-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/dzaima/CBQN.git cbqn
+          git -C cbqn checkout 2bf102f
+          make -C cbqn
+      - name: Build hao-bqn and run BQN tests with CBQN cross-check
+        run: |
+          make -f Makefile.ext CC=gcc-14 bin-gcc-14/hao-bqn
+          CBQN=$PWD/cbqn/BQN sh tests/run_bqn_tests.sh bin-gcc-14/hao-bqn
+
+  compcert:
+    name: CompCert 3.18 / make -f Makefile.ext check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare install prefix
+        run: sudo mkdir -p /opt/compcert && sudo chown "$USER" /opt/compcert
+      - name: Cache CompCert
+        id: compcert-cache
+        uses: actions/cache@v4
+        with:
+          path: /opt/compcert
+          key: compcert-v3.18-ubuntu-24.04-coq8.18
+      - name: Install Coq, OCaml, Menhir
+        if: steps.compcert-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends coq ocaml ocaml-findlib menhir libmenhir-ocaml-dev
+      - name: Build CompCert from source
+        if: steps.compcert-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch v3.18 https://github.com/AbsInt/CompCert.git compcert-src
+          cd compcert-src
+          ./configure -prefix /opt/compcert x86_64-linux
+          make -j"$(nproc)" all
+          make install
+      - name: CompCert version
+        run: /opt/compcert/bin/ccomp -version
+      - name: Build and test with CompCert
+        run: make -f Makefile.ext CC=/opt/compcert/bin/ccomp check

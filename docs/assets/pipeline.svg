@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
+  <title>HERMETIC-Ω build and evaluation pipeline</title>
+  <desc>Three paths through the repository: the original hao CLI, the completed IR evaluator, and the hao-bqn interpreter, all over the C11 array engine.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#59E1EE"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#F0CA79"/></marker>
+  </defs>
+  <rect width="1200" height="760" fill="#080C18"/>
+  <text x="600" y="40" font-family="monospace" font-size="22" fill="#EAF0FF" text-anchor="middle" font-weight="bold">HERMETIC-Ω — evaluation pipeline</text>
+  <text x="220" y="85" font-family="monospace" font-size="16" fill="#7659FF" text-anchor="middle" font-weight="normal">hao  (original CLI)</text>
+  <text x="600" y="85" font-family="monospace" font-size="16" fill="#59E1EE" text-anchor="middle" font-weight="normal">IR completion  (ir_ext)</text>
+  <text x="980" y="85" font-family="monospace" font-size="16" fill="#F0CA79" text-anchor="middle" font-weight="normal">hao-bqn  (interpreter)</text>
+  <rect x="60" y="105" width="320" height="60" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="220.0" y="140.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">argv[1]  "[1 0 0]"</text>
+  <rect x="60" y="195" width="320" height="60" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="220.0" y="220.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/parser.c  parse()</text>
+  <text x="220.0" y="240.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">Node: ATOM / ARRAY / …</text>
+  <rect x="60" y="285" width="320" height="60" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="220.0" y="310.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/ir.c  ir_from_node()</text>
+  <text x="220.0" y="330.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">IRNode tree</text>
+  <rect x="60" y="375" width="320" height="60" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="220.0" y="400.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/ir.c  ir_eval()</text>
+  <text x="220.0" y="420.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">LOAD returns -1 (see Known issues)</text>
+  <rect x="60" y="465" width="320" height="60" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="220.0" y="490.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/main.c</text>
+  <text x="220.0" y="510.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">hao_memory_report()</text>
+  <path d="M220 165 V193" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M220 255 V283" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M220 345 V373" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M220 435 V463" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="440" y="105" width="320" height="60" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="600.0" y="140.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/parser.c  parse()</text>
+  <rect x="440" y="195" width="320" height="60" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="600.0" y="220.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">ir_from_node_ext()</text>
+  <text x="600.0" y="240.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">array literal → IR_LOAD</text>
+  <rect x="440" y="285" width="320" height="60" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="600.0" y="310.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">ir_node_new / ir_load_array</text>
+  <text x="600.0" y="330.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">build EXP, DOT, NORM, …</text>
+  <rect x="440" y="375" width="320" height="60" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="600.0" y="400.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">ir_eval_ext()</text>
+  <text x="600.0" y="420.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">all 9 IR ops</text>
+  <rect x="440" y="465" width="320" height="60" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="600.0" y="490.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">ir_free()</text>
+  <text x="600.0" y="510.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">defined in src/ir_ext.c</text>
+  <path d="M600 165 V193" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M600 255 V283" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M600 345 V373" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M600 435 V463" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="820" y="105" width="320" height="60" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="980.0" y="140.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">lang/*.bqn  ·  -e expr</text>
+  <rect x="820" y="195" width="320" height="60" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="980.0" y="220.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/interp.c  lex + parse</text>
+  <text x="980.0" y="240.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">HAΩ dialect  |  -b strict BQN</text>
+  <rect x="820" y="285" width="320" height="60" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="980.0" y="310.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/interp.c  hb_eval()</text>
+  <text x="980.0" y="330.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">blocks · trains · modifiers</text>
+  <rect x="820" y="375" width="320" height="60" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="980.0" y="400.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">src/interp_prim.c</text>
+  <text x="980.0" y="420.2" font-family="monospace" font-size="12" fill="#8A93B8" text-anchor="middle">primitives + •hao.* bridge</text>
+  <rect x="820" y="465" width="320" height="60" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="980.0" y="500.2" font-family="monospace" font-size="15" fill="#EAF0FF" text-anchor="middle">•Show / •Out / stdout</text>
+  <path d="M980 165 V193" fill="none" stroke="#F0CA79" stroke-width="1.6" marker-end="url(#g)"/>
+  <path d="M980 255 V283" fill="none" stroke="#F0CA79" stroke-width="1.6" marker-end="url(#g)"/>
+  <path d="M980 345 V373" fill="none" stroke="#F0CA79" stroke-width="1.6" marker-end="url(#g)"/>
+  <path d="M980 435 V463" fill="none" stroke="#F0CA79" stroke-width="1.6" marker-end="url(#g)"/>
+  <rect x="60" y="590" width="1080" height="70" rx="8" fill="#171A3A" stroke="#6EE7A8" stroke-width="1.5"/>
+  <text x="600.0" y="620.1" font-family="monospace" font-size="16" fill="#EAF0FF" text-anchor="middle">C11 array engine:  src/array.c · src/geom.c · src/array_ext.c · src/geom_ext.c</text>
+  <text x="600.0" y="641.1" font-family="monospace" font-size="13" fill="#8A93B8" text-anchor="middle">HaoArray · 64-byte aligned pool · shape/rank checks · sphere, GA, group kernels</text>
+  <path d="M220 525 V586" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M600 525 V586" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M980 525 V586" fill="none" stroke="#F0CA79" stroke-width="1.6" marker-end="url(#g)"/>
+  <text x="600" y="700" font-family="monospace" font-size="14" fill="#8A93B8" text-anchor="middle" font-weight="normal">Compiled by CompCert ccomp 3.17 (v3.18 tag) · GCC 14 · Clang 18 — make -f Makefile.ext check</text>
+  <text x="600" y="725" font-family="monospace" font-size="13" fill="#8A93B8" text-anchor="middle" font-weight="normal">original files unchanged; every additional path is new code</text>
+</svg>
