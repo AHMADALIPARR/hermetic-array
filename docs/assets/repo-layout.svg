@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img">
+  <title>HERMETIC-Ω repository layout</title>
+  <desc>Top-level folders and what each contains; additions are marked separately from original files.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#59E1EE"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#F0CA79"/></marker>
+  </defs>
+  <rect width="1200" height="800" fill="#080C18"/>
+  <text x="600" y="40" font-family="monospace" font-size="22" fill="#EAF0FF" text-anchor="middle" font-weight="bold">HERMETIC-Ω — repository layout</text>
+  <text x="600" y="66" font-family="monospace" font-size="13" fill="#8A93B8" text-anchor="middle" font-weight="normal">violet = original files · gold = additions (PR #1 and this README PR)</text>
+  <rect x="470" y="85" width="260" height="50" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="600.0" y="116.0" font-family="monospace" font-size="17" fill="#EAF0FF" text-anchor="middle">hermetic-array/</text>
+  <rect x="20" y="190" width="210" height="44" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="125.0" y="217.6" font-family="monospace" font-size="16" fill="#EAF0FF" text-anchor="middle">src/</text>
+  <path d="M600 135 C 600 160, 125 160, 125 186" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="20" y="250" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="125.0" y="274.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">array.c/h  geom.c/h</text>
+  <rect x="20" y="298" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="125.0" y="322.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">parser.c/h  ir.c/h</text>
+  <rect x="20" y="346" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="125.0" y="370.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">toolchain.c/h  main.c</text>
+  <rect x="20" y="394" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="125.0" y="418.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">glyph.c</text>
+  <rect x="20" y="442" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="125.0" y="466.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">array_ext.c/h  geom_ext.c/h</text>
+  <rect x="20" y="490" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="125.0" y="514.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">ir_ext.c/h</text>
+  <rect x="20" y="538" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="125.0" y="562.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">interp.c/h  interp_prim.c</text>
+  <rect x="20" y="586" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="125.0" y="610.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">interp_main.c</text>
+  <rect x="255" y="190" width="210" height="44" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="360.0" y="217.6" font-family="monospace" font-size="16" fill="#EAF0FF" text-anchor="middle">lang/</text>
+  <path d="M600 135 C 600 160, 360 160, 360 186" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="255" y="250" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="360.0" y="274.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">engine.bqn sphere.bqn</text>
+  <rect x="255" y="298" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="360.0" y="322.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">types.bqn group.bqn</text>
+  <rect x="255" y="346" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="360.0" y="370.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">ga.bqn glyph_registry.bqn</text>
+  <rect x="255" y="394" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="360.0" y="418.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">*.apl  *.j  *.klong  *.q</text>
+  <rect x="255" y="442" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="360.0" y="466.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">ga_ext.bqn</text>
+  <rect x="490" y="190" width="210" height="44" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="595.0" y="217.6" font-family="monospace" font-size="16" fill="#EAF0FF" text-anchor="middle">proofs/</text>
+  <path d="M600 135 C 600 160, 595 160, 595 186" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="490" y="250" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="595.0" y="274.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">Array.agda</text>
+  <rect x="490" y="298" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="595.0" y="322.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">Sphere.agda</text>
+  <rect x="490" y="346" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="595.0" y="370.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">Geometry.agda</text>
+  <rect x="490" y="394" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="595.0" y="418.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">Operators.agda  Type.agda</text>
+  <rect x="725" y="190" width="210" height="44" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="830.0" y="217.6" font-family="monospace" font-size="16" fill="#EAF0FF" text-anchor="middle">tests/</text>
+  <path d="M600 135 C 600 160, 830 160, 830 186" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="725" y="250" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="830.0" y="274.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">test_sphere.c</text>
+  <rect x="725" y="298" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="830.0" y="322.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">test_array_ext.c</text>
+  <rect x="725" y="346" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="830.0" y="370.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">test_geom_ext.c</text>
+  <rect x="725" y="394" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="830.0" y="418.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">test_ir_ext.c  test_interp.c</text>
+  <rect x="725" y="442" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="830.0" y="466.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">run_bqn_tests.sh  bqn/</text>
+  <rect x="960" y="190" width="210" height="44" rx="8" fill="#171A3A" stroke="#59E1EE" stroke-width="1.5"/>
+  <text x="1065.0" y="217.6" font-family="monospace" font-size="16" fill="#EAF0FF" text-anchor="middle">docs/</text>
+  <path d="M600 135 C 600 160, 1065 160, 1065 186" fill="none" stroke="#59E1EE" stroke-width="1.6" marker-end="url(#a)"/>
+  <rect x="960" y="250" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="1065.0" y="274.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">grammar.md</text>
+  <rect x="960" y="298" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="1065.0" y="322.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">compatibility.md</text>
+  <rect x="960" y="346" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="1065.0" y="370.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">operators/  references/</text>
+  <rect x="960" y="394" width="210" height="40" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="1065.0" y="418.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">assets/ (3 SVGs)</text>
+  <rect x="960" y="442" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="1065.0" y="466.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">interpreter.md</text>
+  <rect x="960" y="490" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="1065.0" y="514.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">additions.md</text>
+  <rect x="960" y="538" width="210" height="40" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="1065.0" y="562.2" font-family="monospace" font-size="12" fill="#EAF0FF" text-anchor="middle">assets/ (3 new SVGs)</text>
+  <rect x="30" y="690" width="350" height="70" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="205.0" y="720.4" font-family="monospace" font-size="14" fill="#EAF0FF" text-anchor="middle">Makefile  ·  README.md</text>
+  <text x="205.0" y="739.4" font-family="monospace" font-size="11" fill="#8A93B8" text-anchor="middle">original build (gcc) · this document</text>
+  <rect x="425" y="690" width="350" height="70" rx="8" fill="#171A3A" stroke="#F0CA79" stroke-width="1.5"/>
+  <text x="600.0" y="720.4" font-family="monospace" font-size="14" fill="#EAF0FF" text-anchor="middle">Makefile.ext</text>
+  <text x="600.0" y="739.4" font-family="monospace" font-size="11" fill="#8A93B8" text-anchor="middle">ccomp default · gcc · clang · check</text>
+  <rect x="820" y="690" width="350" height="70" rx="8" fill="#171A3A" stroke="#7659FF" stroke-width="1.5"/>
+  <text x="995.0" y="720.4" font-family="monospace" font-size="14" fill="#EAF0FF" text-anchor="middle">LICENSE</text>
+  <text x="995.0" y="739.4" font-family="monospace" font-size="11" fill="#8A93B8" text-anchor="middle">GNU AGPL-3.0 text</text>
+</svg>
