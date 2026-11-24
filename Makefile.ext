@@ -1,0 +1,98 @@
+# HERMETIC ARRAY Ω (HAΩ)
+# Copyright (C) 2026 AHMAD ALI PARR
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# HERMETIC-Ω extended build (additions only; the original Makefile is untouched).
+# Default compiler is CompCert:   make -f Makefile.ext
+# Cross-check with GCC or Clang:  make -f Makefile.ext CC=gcc
+#
+# -D_POSIX_C_SOURCE=200809L declares strndup (used by src/parser.c) under
+# -std=c11; without it the original parser does not build on GCC 14 or CompCert.
+
+CC ?= ccomp
+ifeq ($(CC),cc)
+CC = ccomp
+endif
+ifeq ($(notdir $(CC)),ccomp)
+CFLAGS ?= -std=c11 -Wall -O -D_POSIX_C_SOURCE=200809L -I src
+else
+CFLAGS ?= -std=c11 -Wall -Wextra -O2 -D_POSIX_C_SOURCE=200809L -I src
+endif
+LDFLAGS = -lm
+OBJDIR ?= obj-$(notdir $(CC))
+BINDIR ?= bin-$(notdir $(CC))
+
+CORE  = src/array.c src/geom.c
+EXT   = src/array_ext.c src/geom_ext.c
+IRSRC = src/parser.c src/ir.c src/ir_ext.c
+INTERP = src/interp.c src/interp_prim.c
+
+obj = $(patsubst src/%.c,$(OBJDIR)/%.o,$(1))
+tobj = $(patsubst tests/%.c,$(OBJDIR)/tests/%.o,$(1))
+
+PROGS = $(BINDIR)/hao $(BINDIR)/hao-bqn
+TESTS = $(BINDIR)/test_sphere $(BINDIR)/test_array_ext $(BINDIR)/test_geom_ext \
+        $(BINDIR)/test_ir_ext $(BINDIR)/test_interp
+
+all: $(PROGS) $(TESTS)
+
+$(OBJDIR)/%.o: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/tests/%.o: tests/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BINDIR)/hao: $(call obj,src/array.c src/geom.c src/parser.c src/ir.c src/toolchain.c src/main.c)
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BINDIR)/hao-bqn: $(call obj,$(INTERP) src/interp_main.c $(CORE) $(EXT))
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BINDIR)/test_sphere: $(call tobj,tests/test_sphere.c) $(call obj,$(CORE))
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BINDIR)/test_array_ext: $(call tobj,tests/test_array_ext.c) $(call obj,$(CORE) $(EXT))
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BINDIR)/test_geom_ext: $(call tobj,tests/test_geom_ext.c) $(call obj,$(CORE) $(EXT))
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BINDIR)/test_ir_ext: $(call tobj,tests/test_ir_ext.c) $(call obj,$(CORE) $(EXT) $(IRSRC))
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BINDIR)/test_interp: $(call tobj,tests/test_interp.c) $(call obj,$(INTERP) $(CORE) $(EXT))
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+check: all
+	$(BINDIR)/test_sphere
+	$(BINDIR)/test_array_ext
+	$(BINDIR)/test_geom_ext
+	$(BINDIR)/test_ir_ext
+	$(BINDIR)/test_interp
+	sh tests/run_bqn_tests.sh $(BINDIR)/hao-bqn
+
+clean:
+	rm -rf $(OBJDIR) $(BINDIR)
+
+.PHONY: all check clean
