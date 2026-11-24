@@ -22,7 +22,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cc: [gcc, clang]
+        # gcc-14, not the runner's default gcc 13.3: GCC 13.3 at -O2 takes the
+        # wrong branch in join2 (src/interp_prim.c); see the PR #2 notes.
+        cc: [gcc-14, clang]
     steps:
       - uses: actions/checkout@v4
       - name: Toolchain
@@ -31,7 +33,7 @@ jobs:
         run: make -f Makefile.ext CC=${{ matrix.cc }} check
 
   sanitizers:
-    name: gcc ASan+UBSan / make -f Makefile.ext check
+    name: gcc-14 ASan+UBSan / make -f Makefile.ext check
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +41,7 @@ jobs:
         env:
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: >
-          make -f Makefile.ext CC=gcc OBJDIR=obj-asan BINDIR=bin-asan
+          make -f Makefile.ext CC=gcc-14 OBJDIR=obj-asan BINDIR=bin-asan
           CFLAGS="-std=c11 -g -O1 -fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer -D_POSIX_C_SOURCE=200809L -I src"
           LDFLAGS="-lm -fsanitize=address,undefined"
           check
@@ -63,8 +65,8 @@ jobs:
           make -C cbqn
       - name: Build hao-bqn and run BQN tests with CBQN cross-check
         run: |
-          make -f Makefile.ext CC=gcc bin-gcc/hao-bqn
-          CBQN=$PWD/cbqn/BQN sh tests/run_bqn_tests.sh bin-gcc/hao-bqn
+          make -f Makefile.ext CC=gcc-14 bin-gcc-14/hao-bqn
+          CBQN=$PWD/cbqn/BQN sh tests/run_bqn_tests.sh bin-gcc-14/hao-bqn
 
   compcert:
     name: CompCert 3.18 / make -f Makefile.ext check
