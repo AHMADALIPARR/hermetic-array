@@ -18,7 +18,7 @@
 #   sh tests/run_bqn_tests.sh path/to/hao-bqn
 # Each tests/bqn/*.bqn names the original lang files it needs on a
 # "# load:" line and optional interpreter flags on a "# flags:" line.
-# Output must match tests/bqn/NAME.out when that file exists.
+# Output must match tests/bqn/NAME.expected when that file exists.
 # If CBQN is set to a CBQN binary, files with "# flags: -b" (plain BQN)
 # are also run under CBQN as the reference implementation.
 
@@ -31,9 +31,9 @@ for t in tests/bqn/*.bqn; do
   load=$(sed -n 's/^# load:[ ]*//p' "$t" | head -n 1)
   flags=$(sed -n 's/^# flags:[ ]*//p' "$t" | head -n 1)
   if "$HB" $flags $load "$t" > "$tmp" 2>&1; then
-    if [ -f "tests/bqn/$name.out" ] && ! cmp -s "$tmp" "tests/bqn/$name.out"; then
+    if [ -f "tests/bqn/$name.expected" ] && ! cmp -s "$tmp" "tests/bqn/$name.expected"; then
       echo "FAIL $name (output differs)"
-      diff "tests/bqn/$name.out" "$tmp"
+      diff "tests/bqn/$name.expected" "$tmp"
       fail=$((fail + 1))
     else
       echo "PASS $name"
@@ -45,7 +45,7 @@ for t in tests/bqn/*.bqn; do
     fail=$((fail + 1))
   fi
   if [ -n "$CBQN" ] && [ "$flags" = "-b" ]; then
-    if "$CBQN" "$t" > "$tmp" 2>&1 && cmp -s "$tmp" "tests/bqn/$name.out"; then
+    if "$CBQN" "$t" > "$tmp" 2>&1 && cmp -s "$tmp" "tests/bqn/$name.expected"; then
       echo "PASS $name (CBQN reference)"
     else
       echo "FAIL $name (CBQN reference)"
