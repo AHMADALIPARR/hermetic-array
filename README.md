@@ -1,3 +1,13 @@
+<!--
+  HERMETIC-Ω (hermetic-array) · README.md
+  SPDX-License-Identifier: LicenseRef-Sovereign-Leviathan-SL-AGPL3-001
+  License-ID: SL-AGPL3-001 | Covenant-Version: 1.0
+  Copyright (C) 2026 SnapKittyWest. Ahmad Ali Parr, Bel Esprit D'Accord Irrevocable Trust.
+  Dual-licensed: GNU AGPL-3.0 (LICENSE) or the Sovereign Leviathan additional terms (LICENSE-SOVEREIGN-LEVIATHAN).
+  Hark, though this node be but a spark,
+  Its covenant endureth through the dark.
+-->
+
 <p align="center">
   <img src="docs/assets/hermetic-omega-hero.svg" alt="HERMETIC-Ω geometric array-language architecture" width="100%" />
 </p>
@@ -9,7 +19,7 @@
 <p align="center">
   <a href="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/release.yml"><img alt="Release" src="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/release.yml/badge.svg"></a>
-  <a href="LICENSE"><img alt="License: AGPL-3.0 + SnapKitty Opaque" src="https://img.shields.io/badge/license-AGPL--3.0%20%2B%20SnapKitty%20Opaque-7659FF"></a>
+  <a href="#19-license"><img alt="License: AGPL-3.0 / Sovereign Leviathan SL-AGPL3-001" src="https://img.shields.io/badge/license-AGPL--3.0%20%2F%20Sovereign%20Leviathan%20SL--AGPL3--001-7659FF"></a>
   <img alt="Language: C11" src="https://img.shields.io/badge/language-C11-59E1EE">
   <img alt="Compiler: CompCert 3.17" src="https://img.shields.io/badge/compiler-CompCert%203.17-F0CA79">
   <img alt="Dialect: BQN / HAΩ" src="https://img.shields.io/badge/dialect-BQN%20%2F%20HA%CE%A9-6EE7A8">
@@ -69,7 +79,8 @@ only designed, not implemented, is labelled **Proposed**.
 | Agda formalisation | Sketches; they do not type-check (see §8) | `proofs/` |
 | Compilation with CompCert | Verified: `make -f Makefile.ext check` passes | `Makefile.ext` |
 | CI: GCC 14, Clang, ASan+UBSan, CBQN cross-check, CompCert | Passing on `main` | `.github/workflows/ci.yml` (§12) |
-| Release packaging (binaries, source tarball, `SHA256SUMS`) | Dry run passes; no tag yet | `.github/workflows/release.yml` (§12.2) |
+| Release packaging (binaries, source tarball, `SHA256SUMS`, both license files) | Releases are cut from `v*` tags; `v1.0.0` is the first. The dry run passes on pull requests | `.github/workflows/release.yml` (§12.2) |
+| Licensing | Dual: GNU AGPL-3.0 or the Sovereign Leviathan additional terms (SL-AGPL3-001); every source and text file carries the SPDX header | `LICENSE`, `LICENSE-SOVEREIGN-LEVIATHAN` (§19) |
 | Unified multi-language surface syntax and elaborator | **Proposed** | `docs/grammar.md` |
 | Benchmarks | None claimed | — |
 
@@ -82,6 +93,7 @@ hermetic-array/
 ├── Makefile                  original build of the hao CLI (gcc)
 ├── Makefile.ext              extended build: CompCert by default, gcc/clang, all tests
 ├── LICENSE                   GNU AGPL-3.0 text
+├── LICENSE-SOVEREIGN-LEVIATHAN  Sovereign Leviathan additional terms (SL-AGPL3-001)
 ├── src/
 │   ├── array.h / array.c     HaoArray, aligned pool, reshape/permute/rotate, inner/norm, sphere evolution
 │   ├── geom.h / geom.c       norm², dot, sinc, sphere exp, orthogonality, geodesic, quaternions
@@ -609,9 +621,9 @@ $ bin-ccomp/hao-bqn lang/group.bqn -e 'Orbit 2 1‿1 3' -e 'Stabilizer 1 3‿4' 
 $ bin-ccomp/hao-bqn lang/engine.bqn lang/ga.bqn lang/ga_ext.bqn -e 'GeoProd3 1‿2‿3 4‿5‿6' -e '•hao.GeoProd 1‿2‿3 4‿5‿6' -e 'GeoProd 1‿0‿0 0‿1‿0'
 ⟨ 32 ¯3 6 ¯3 ⟩
 ⟨ 32 ¯3 6 ¯3 ⟩
-Error: lang/ga.bqn:9: undefined primitive ⟕ (not defined by BQN or the HAΩ glyph registry)
+Error: lang/ga.bqn:17: undefined primitive ⟕ (not defined by BQN or the HAΩ glyph registry)
 $ bin-ccomp/hao-bqn lang/sphere.bqn lang/types.bqn -e 'UnitVector 2‿0‿0'
-Error: lang/types.bqn:6: not unit
+Error: lang/types.bqn:14: not unit
 $ bin-ccomp/hao-bqn lang/glyph_registry.bqn -e 'Registry 0'
 "rank"
 ```
@@ -687,9 +699,9 @@ on GCC 14:
 
 ```console
 $ make 2>&1 | grep -E 'error|Error'
-src/parser.c:72:16: error: implicit declaration of function ‘strndup’; did you mean ‘strncmp’? [-Wimplicit-function-declaration]
-src/parser.c:72:14: error: assignment to ‘char *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
-make: *** [Makefile:14: src/parser.o] Error 1
+src/parser.c:82:16: error: implicit declaration of function ‘strndup’; did you mean ‘strncmp’? [-Wimplicit-function-declaration]
+src/parser.c:82:14: error: assignment to ‘char *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
+make: *** [Makefile:22: src/parser.o] Error 1
 ```
 
 With the define passed explicitly, the original build succeeds. `hao` then
@@ -749,7 +761,7 @@ bqn tests: 10 passed, 0 failed
 
 A clean build makes 24 `ccomp` invocations. They produce only two kinds of
 warning, both from original files: `'_Alignas' is a C11 extension` (from
-`src/array.h:47`, 16 times) and `unused variable 'g'` (`src/geom.c:144`). The
+`src/array.h:57`, 16 times) and `unused variable 'g'` (`src/geom.c:154`). The
 additions compile without warnings.
 
 New code avoids the C features CompCert does not support:
@@ -844,7 +856,7 @@ Runs on `v*` tags, on pull requests that change the workflow, and on demand.
 
 | Job | What it does |
 |-----|--------------|
-| `build gcc` | `make -f Makefile.ext CC=gcc-14 check`, then packages `hao` and `hao-bqn` as `hermetic-array-<tag>-linux-x86_64-gcc.tar.gz` |
+| `build gcc` | `make -f Makefile.ext CC=gcc-14 check`, then packages `hao`, `hao-bqn`, `LICENSE` and `LICENSE-SOVEREIGN-LEVIATHAN` as `hermetic-array-<tag>-linux-x86_64-gcc.tar.gz` |
 | `build compcert` | the same with `ccomp`, as `hermetic-array-<tag>-linux-x86_64-compcert.tar.gz` |
 | `publish release` | `git archive` source tarball and `SHA256SUMS`; on a tag, `gh release create <tag> dist/* --generate-notes --verify-tag`; otherwise the files are uploaded as the `release-dry-run` artifact |
 
@@ -855,9 +867,13 @@ To publish a release from `main`:
 
 ```sh
 git checkout main && git pull
-git tag -a v0.1.0 -m "v0.1.0"
-git push origin v0.1.0
+git tag -a v1.0.0 -m "v1.0.0"
+git push origin v1.0.0
 ```
+
+The tag starts both workflows. `Release` builds and checks with GCC 14 and
+CompCert, and every archive it publishes contains `LICENSE` and
+`LICENSE-SOVEREIGN-LEVIATHAN`; the `publish release` job fails if one is missing.
 
 ## 13. Known issues in the original code
 
@@ -866,8 +882,8 @@ has a separate, working addition next to it.
 
 | Location | Issue | Evidence | Working addition |
 |----------|-------|----------|------------------|
-| `src/parser.c:72` | `strndup` is undeclared under `-std=c11` | the original `make` fails on GCC 14 (§9) | `-D_POSIX_C_SOURCE=200809L` in `Makefile.ext` |
-| `hao_permute_axes` (`src/array.c`) | applies the inverse permutation, and writes out of bounds when the permutation is not an involution | ASan heap-buffer-overflow at `src/array.c:197` for perm 1‿2‿0 on shape 2‿3‿4 | `hao_transpose_axes`: shape 3‿4‿2, ravel 0 12 1 13 2 14 … (matches numpy) |
+| `src/parser.c:82` | `strndup` is undeclared under `-std=c11` | the original `make` fails on GCC 14 (§9) | `-D_POSIX_C_SOURCE=200809L` in `Makefile.ext` |
+| `hao_permute_axes` (`src/array.c`) | applies the inverse permutation, and writes out of bounds when the permutation is not an involution | ASan heap-buffer-overflow at `src/array.c:207` for perm 1‿2‿0 on shape 2‿3‿4 | `hao_transpose_axes`: shape 3‿4‿2, ravel 0 12 1 13 2 14 … (matches numpy) |
 | `hao_quat_rotate` (`src/geom.c`) | `hao_quat_mul(tmp, qinv, tmp)` aliases its output | a 90° turn about z sends (1,0,0) to (0, 0.5, 0) | `hao_rotor_apply` / `hao_quat_sandwich` give (0, 1, 0) |
 | `hao_geometric_product` | drops the e12 component; output uninitialised for n < 3 | code reading | `hao_geometric_product3`, `hao_mv_product` |
 | `hao_exterior` | alias of the geometric product | code reading | `hao_wedge3`, `hao_mv_outer` |
@@ -962,11 +978,53 @@ The engine has to stay hermetic:
 
 ## 19. License
 
-HERMETIC-Ω is dual-licensed:
+HERMETIC-Ω is dual-licensed. You may use it under either:
 
-- the **GNU Affero General Public License v3.0**: full text in [`LICENSE`](LICENSE). The C sources (except `glyph.c` and `toolchain.c/h`), `engine.bqn`, `Sphere.agda` and all additions carry the AGPL-3.0 header;
-- the **SnapKitty Opaque License** ("look, don't touch").
+| License | Text | Summary |
+|---------|------|---------|
+| GNU Affero General Public License v3.0 | [`LICENSE`](LICENSE) | the FSF text, unchanged |
+| Sovereign Leviathan additional terms, License-ID `SL-AGPL3-001`, Covenant-Version 1.0 | [`LICENSE-SOVEREIGN-LEVIATHAN`](LICENSE-SOVEREIGN-LEVIATHAN) | AGPL-3.0 plus section 7 additional terms: attribution and covenant, no competing-use restriction, formal-verification encouragement, dual linking |
 
-Copyright (C) 2026 AHMAD ALI PARR.
+SPDX identifier: `LicenseRef-Sovereign-Leviathan-SL-AGPL3-001`.
+
+Copyright (C) 2026 SnapKittyWest. Ahmad Ali Parr, Bel Esprit D'Accord Irrevocable Trust.
+
+**Attribution.** Any distribution or network use must keep the copyright
+notice, the License-ID and the covenant line:
+
+> Hark, though this node be but a spark,<br>
+> Its covenant endureth through the dark.
+
+### 19.1 File headers
+
+Every source and text file starts with the same notice in its own comment
+syntax. Here it is in a C file (`src/array.c`):
+
+```c
+/*
+ * HERMETIC-Ω (hermetic-array) · src/array.c
+ * SPDX-License-Identifier: LicenseRef-Sovereign-Leviathan-SL-AGPL3-001
+ * License-ID: SL-AGPL3-001 | Covenant-Version: 1.0
+ * Copyright (C) 2026 SnapKittyWest. Ahmad Ali Parr, Bel Esprit D'Accord Irrevocable Trust.
+ * Dual-licensed: GNU AGPL-3.0 (LICENSE) or the Sovereign Leviathan additional terms (LICENSE-SOVEREIGN-LEVIATHAN).
+ * Hark, though this node be but a spark,
+ * Its covenant endureth through the dark.
+ */
+```
+
+| Files | Comment form |
+|-------|--------------|
+| `src/*.c`, `src/*.h`, `tests/*.c` | `/* … */` block |
+| `*.bqn`, `tests/run_bqn_tests.sh`, `Makefile`, `Makefile.ext`, `.github/workflows/*.yml`, `.gitignore` | `# ` lines |
+| `lang/*.apl` | `⍝ ` lines |
+| `lang/*.j` | `NB. ` lines |
+| `lang/*.klong` | one `:"…"` comment |
+| `lang/q_engine.q` | `/ ` lines |
+| `proofs/*.agda` | `-- ` lines |
+| `*.md`, `docs/assets/*.svg` | `<!-- … -->` (not shown when rendered) |
+
+`LICENSE`, `LICENSE-SOVEREIGN-LEVIATHAN` and the `tests/bqn/*.expected` output
+files have no header. The headers are additions placed above the existing
+text; the AGPL-3.0 notices already in the C sources are kept as written.
 
 This README documents the repository as it exists. It does not invent implementations or results.
