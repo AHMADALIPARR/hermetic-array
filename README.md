@@ -145,7 +145,7 @@ $ bin-ccomp/hao-bqn lang/sphere.bqn -e 'IsUnit 1‿0‿0' -e 'IsUnit 2‿0‿0' 
 Sphere exponential map (`hao_sphere_exp` in `src/geom.c`, `SphereExp` in `lang/sphere.bqn` and `lang/engine.bqn`):
 
 ```math
-\operatorname{Exp}_x(v) = \cos(\lVert v \rVert)\, x + \operatorname{sinc}(\lVert v \rVert)\, v
+\mathrm{Exp}_x(v) = \cos(\lVert v \rVert)\, x + \mathrm{sinc}(\lVert v \rVert)\, v
 ```
 
 HAΩ (`lang/engine.bqn`) · C kernels `hao_sphere_exp`, `hao_array_sphere_exp` · bridge `•hao.SphereExp x v`. `⊢ ⊣` are the first and second arguments, `ℓ` the whole argument, `c ? a ◇ b` the conditional:
@@ -177,7 +177,7 @@ The zero case is continuous through the Taylor expansion of sinc. The preconditi
 Logarithm map and geodesic distance (`hao_sphere_log`, `hao_sphere_distance` in `src/geom_ext.c`):
 
 ```math
-\operatorname{Log}_x(y) = \frac{\theta}{\sin\theta}\,(y - \cos\theta\, x), \qquad d(x,y) = \theta = \arccos(x \cdot y)
+\mathrm{Log}_x(y) = \frac{\theta}{\sin\theta}\,(y - \cos\theta\, x), \qquad d(x,y) = \theta = \arccos(x \cdot y)
 ```
 
 No `lang/*.bqn` definition; HAΩ reaches the C kernels `hao_sphere_log` and `hao_sphere_distance` through the bridge:
@@ -217,7 +217,7 @@ $ bin-ccomp/hao-bqn lang/engine.bqn -e 'Geodesic 1‿0‿0 0‿1‿0 0.5' -e '1�
 Special orthogonal group and orthogonal invariance:
 
 ```math
-\operatorname{SO}(n) = \{ Q \in \mathbb{R}^{n \times n} : Q^T Q = I,\ \det Q = 1 \}, \qquad \lVert Qx \rVert^2 = \lVert x \rVert^2
+\mathrm{SO}(n) = \{ Q \in \mathbb{R}^{n \times n} : Q^T Q = I,\ \det Q = 1 \}, \qquad \lVert Qx \rVert^2 = \lVert x \rVert^2
 ```
 
 HAΩ (`lang/group.bqn`) · glyph `⟂` (orthogonality) · C kernels `hao_is_special_orthogonal`, `hao_group_act_matrix` · bridge `•hao.IsSO`, `•hao.Act`. The rotation by 90° below keeps $`\lVert Qx \rVert`$ = 5:
@@ -248,7 +248,7 @@ $ bin-ccomp/hao-bqn lang/group.bqn -e 'r ← 2‿2⥊0‿¯1‿1‿0' -e '•hao
 Recursive geometric state, where $`\Phi`$ is a pure function preserving declared invariants (unit norm, tangency, shape):
 
 ```math
-G_{n+1} = \Phi(G_n), \qquad X_{n+1} = \operatorname{Exp}_{X_n}(\eta_n V_n)
+G_{n+1} = \Phi(G_n), \qquad X_{n+1} = \mathrm{Exp}_{X_n}(\eta_n V_n)
 ```
 
 HAΩ (`lang/engine.bqn`, fuel-bounded recursion with $`\eta_n = \eta`$ and $`V_n = v`$) · C kernel `hao_evolve_sphere(x, v, η, steps, out)` · bridge `•hao.Evolve x v η n`. Both reuse `v` unchanged at every step (see §13):
@@ -309,11 +309,11 @@ The multivector basis order is bitmask order: $`1, e_1, e_2, e_{12}, e_3, e_{13}
 | Formula | HAΩ notation | C kernel |
 |---------|--------------|----------|
 | $`S^n`$ membership | `IsUnit x` | `hao_is_unit` |
-| $`\operatorname{Exp}_x(v)`$ | `SphereExp x v` | `hao_sphere_exp` |
-| $`\operatorname{Log}_x(y)`$, $`d(x,y)`$ | `•hao.Log x y`, `•hao.Distance x y` | `hao_sphere_log`, `hao_sphere_distance` |
+| $`\mathrm{Exp}_x(v)`$ | `SphereExp x v` | `hao_sphere_exp` |
+| $`\mathrm{Log}_x(y)`$, $`d(x,y)`$ | `•hao.Log x y`, `•hao.Distance x y` | `hao_sphere_log`, `hao_sphere_distance` |
 | $`\gamma(t)`$ | `Geodesic x y t`, `x ⌁ y` | `hao_geodesic` |
-| $`Q \in \operatorname{SO}(n)`$, $`Qx`$ | `•hao.IsSO q`, `Act g x` | `hao_is_special_orthogonal`, `hao_group_act_matrix` |
-| $`X_{n+1} = \operatorname{Exp}_{X_n}(\eta V)`$ | `Evolve x v η n` | `hao_evolve_sphere` |
+| $`Q \in \mathrm{SO}(n)`$, $`Qx`$ | `•hao.IsSO q`, `Act g x` | `hao_is_special_orthogonal`, `hao_group_act_matrix` |
+| $`X_{n+1} = \mathrm{Exp}_{X_n}(\eta V)`$ | `Evolve x v η n` | `hao_evolve_sphere` |
 | $`ab = a \cdot b + a \wedge b`$ | `GeoProd3 a b`, `a ⊙ b` | `hao_geometric_product3` |
 | $`a \otimes b`$ | `a ⊗ b` | `hao_outer` |
 | $`a \perp b`$ | `a ⟂ b` | `hao_inner` |
@@ -635,7 +635,7 @@ interpreter was run against them for this README, so their behaviour is
 | `engine.j` | `norm dot normalize sphere_exp geodesic` (explicit and tacit J) |
 | `recursion.j` | power-conjunction evolution, `orbit act stabilizer` |
 | `engine.klong` | `.norm .dot .normalize .sinc .sphere_exp .evolve` |
-| `evolution.klong` | fuel-bounded $G_{n+1} = \operatorname{Exp}_{G_n}(\eta V)$ |
+| `evolution.klong` | fuel-bounded $`G_{n+1} = \mathrm{Exp}_{G_n}(\eta V)`$ |
 | `recursion.klong` | `.evolve_sphere .geodesic_chain` |
 | `q_engine.q` | `norm dot normalize sphere_exp evolve` in Q |
 
