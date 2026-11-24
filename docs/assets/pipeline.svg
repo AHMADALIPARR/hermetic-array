@@ -1,3 +1,12 @@
+<!--
+  HERMETIC-Ω (hermetic-array) · docs/assets/pipeline.svg
+  SPDX-License-Identifier: LicenseRef-Sovereign-Leviathan-SL-AGPL3-001
+  License-ID: SL-AGPL3-001 | Covenant-Version: 1.0
+  Copyright (C) 2026 SnapKittyWest. Ahmad Ali Parr, Bel Esprit D'Accord Irrevocable Trust.
+  Dual-licensed: GNU AGPL-3.0 (LICENSE) or the Sovereign Leviathan additional terms (LICENSE-SOVEREIGN-LEVIATHAN).
+  Hark, though this node be but a spark,
+  Its covenant endureth through the dark.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
   <title>HERMETIC-Ω build and evaluation pipeline</title>
   <desc>Three paths through the repository: the original hao CLI, the completed IR evaluator, and the hao-bqn interpreter, all over the C11 array engine.</desc>
