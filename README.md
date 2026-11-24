@@ -117,33 +117,33 @@ hermetic-array/
 
 Unit sphere:
 
-$$S^n = \{ x \in \mathbb{R}^{n+1} : \lVert x \rVert = 1 \}$$
+S^n = \{ x \in \mathbb{R}^{n+1} : \lVert x \rVert = 1 \}
 
 Sphere exponential map (`hao_sphere_exp` in `src/geom.c`, `SphereExp` in `lang/sphere.bqn` and `lang/engine.bqn`):
 
-$$\operatorname{Exp}_x(v) = \cos(\lVert v \rVert)\, x + \operatorname{sinc}(\lVert v \rVert)\, v$$
+\operatorname{Exp}_x(v) = \cos(\lVert v \rVert)\, x + \operatorname{sinc}(\lVert v \rVert)\, v
 
 The zero case is continuous through the Taylor expansion of sinc. The preconditions are $\lVert x \rVert = 1$ and $x \cdot v = 0$.
 
 Logarithm map and geodesic distance (`hao_sphere_log`, `hao_sphere_distance` in `src/geom_ext.c`):
 
-$$\operatorname{Log}_x(y) = \frac{\theta}{\sin\theta}\,(y - \cos\theta\, x), \qquad d(x,y) = \theta = \arccos(x \cdot y)$$
+\operatorname{Log}_x(y) = \frac{\theta}{\sin\theta}\,(y - \cos\theta\, x), \qquad d(x,y) = \theta = \arccos(x \cdot y)
 
 Geodesic interpolation, i.e. slerp (`hao_geodesic`, `Geodesic` in `lang/engine.bqn`):
 
-$$\gamma(t) = \frac{\sin((1-t)\theta)}{\sin\theta}\,x + \frac{\sin(t\theta)}{\sin\theta}\,y$$
+\gamma(t) = \frac{\sin((1-t)\theta)}{\sin\theta}\,x + \frac{\sin(t\theta)}{\sin\theta}\,y
 
 Special orthogonal group and orthogonal invariance:
 
-$$\operatorname{SO}(n) = \{ Q \in \mathbb{R}^{n \times n} : Q^T Q = I,\ \det Q = 1 \}, \qquad \lVert Qx \rVert^2 = \lVert x \rVert^2$$
+\operatorname{SO}(n) = \{ Q \in \mathbb{R}^{n \times n} : Q^T Q = I,\ \det Q = 1 \}, \qquad \lVert Qx \rVert^2 = \lVert x \rVert^2
 
 Recursive geometric state, where $\Phi$ is a pure function preserving declared invariants (unit norm, tangency, shape):
 
-$$G_{n+1} = \Phi(G_n), \qquad X_{n+1} = \operatorname{Exp}_{X_n}(\eta_n V_n)$$
+G_{n+1} = \Phi(G_n), \qquad X_{n+1} = \operatorname{Exp}_{X_n}(\eta_n V_n)
 
 Geometric product of vectors in Cl(3,0) (`hao_geometric_product3`, `hao_mv_product`):
 
-$$ab = a \cdot b + a \wedge b$$
+ab = a \cdot b + a \wedge b
 
 The multivector basis order is bitmask order: $1, e_1, e_2, e_{12}, e_3, e_{13}, e_{23}, e_{123}$.
 
