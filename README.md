@@ -992,7 +992,7 @@ Copyright (C) 2026 SnapKittyWest. Ahmad Ali Parr, Bel Esprit D'Accord Irrevocabl
 **Attribution.** Any distribution or network use must keep the copyright
 notice, the License-ID and the covenant line:
 
-> Hark, though this node be but a spark,
+> Hark, though this node be but a spark,<br>
 > Its covenant endureth through the dark.
 
 ### 19.1 File headers
