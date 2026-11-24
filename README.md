@@ -7,6 +7,8 @@
 <p align="center">Pure Arrays. Geometric Algebra. Deterministic Transformation.</p>
 
 <p align="center">
+  <a href="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/release.yml"><img alt="Release" src="https://github.com/AHMADALIPARR/hermetic-array/actions/workflows/release.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: AGPL-3.0 + SnapKitty Opaque" src="https://img.shields.io/badge/license-AGPL--3.0%20%2B%20SnapKitty%20Opaque-7659FF"></a>
   <img alt="Language: C11" src="https://img.shields.io/badge/language-C11-59E1EE">
   <img alt="Compiler: CompCert 3.17" src="https://img.shields.io/badge/compiler-CompCert%203.17-F0CA79">
@@ -66,6 +68,8 @@ only designed, not implemented, is labelled **Proposed**.
 | BQN, APL, J, Klong and Q definitions | Present; the BQN files run on `hao-bqn` | `lang/` |
 | Agda formalisation | Sketches; they do not type-check (see §8) | `proofs/` |
 | Compilation with CompCert | Verified: `make -f Makefile.ext check` passes | `Makefile.ext` |
+| CI: GCC 14, Clang, ASan+UBSan, CBQN cross-check, CompCert | Passing on `main` | `.github/workflows/ci.yml` (§12) |
+| Release packaging (binaries, source tarball, `SHA256SUMS`) | Dry run passes; no tag yet | `.github/workflows/release.yml` (§12.2) |
 | Unified multi-language surface syntax and elaborator | **Proposed** | `docs/grammar.md` |
 | Benchmarks | None claimed | — |
 
@@ -117,35 +121,204 @@ hermetic-array/
 
 Unit sphere:
 
+```math
 S^n = \{ x \in \mathbb{R}^{n+1} : \lVert x \rVert = 1 \}
+```
+
+HAΩ (`lang/sphere.bqn`) · C kernel `hao_is_unit(x, n, tol)`. The bars `|…|` are magnitude; `Norm` is the squared norm, so the test is $`\lVert x \rVert^2 = 1`$:
+
+```bqn
+Norm ← +´×˘
+
+IsUnit ← {
+  |Norm ℓ - 1| < 1e¯8
+}
+```
+
+```console
+$ bin-ccomp/hao-bqn lang/sphere.bqn -e 'IsUnit 1‿0‿0' -e 'IsUnit 2‿0‿0' -e 'IsTangent 1‿0‿0 0‿0.1‿0'
+1
+0
+1
+```
 
 Sphere exponential map (`hao_sphere_exp` in `src/geom.c`, `SphereExp` in `lang/sphere.bqn` and `lang/engine.bqn`):
 
+```math
 \operatorname{Exp}_x(v) = \cos(\lVert v \rVert)\, x + \operatorname{sinc}(\lVert v \rVert)\, v
+```
 
-The zero case is continuous through the Taylor expansion of sinc. The preconditions are $\lVert x \rVert = 1$ and $x \cdot v = 0$.
+HAΩ (`lang/engine.bqn`) · C kernels `hao_sphere_exp`, `hao_array_sphere_exp` · bridge `•hao.SphereExp x v`. `⊢ ⊣` are the first and second arguments, `ℓ` the whole argument, `c ? a ◇ b` the conditional:
+
+```bqn
+Sinc ← {
+  t ← ℓ
+  ∣t∣ < 1e¯12 ? 1 - (t×t)÷6 ◇ (Sin t) ÷ t
+}
+
+SphereExp ← {
+  x ← ⊢
+  v ← ⊣
+  nv ← √ Norm v
+  c ← Cos nv
+  s ← Sinc nv
+  (c × x) + (s × v)
+}
+```
+
+```console
+$ bin-ccomp/hao-bqn lang/engine.bqn -e 'SphereExp 1‿0‿0 0‿0.1‿0' -e '•hao.SphereExp 1‿0‿0 0‿0.1‿0'
+⟨ 0.9950041652780258 0.09983341664682815 0 ⟩
+⟨ 0.9950041652780258 0.09983341664682815 0 ⟩
+```
+
+The zero case is continuous through the Taylor expansion of sinc. The preconditions are $`\lVert x \rVert = 1`$ and $`x \cdot v = 0`$.
 
 Logarithm map and geodesic distance (`hao_sphere_log`, `hao_sphere_distance` in `src/geom_ext.c`):
 
+```math
 \operatorname{Log}_x(y) = \frac{\theta}{\sin\theta}\,(y - \cos\theta\, x), \qquad d(x,y) = \theta = \arccos(x \cdot y)
+```
+
+No `lang/*.bqn` definition; HAΩ reaches the C kernels `hao_sphere_log` and `hao_sphere_distance` through the bridge:
+
+```console
+$ bin-ccomp/hao-bqn -e '•hao.Log 1‿0‿0 0‿1‿0' -e '•hao.Distance 1‿0‿0 0‿1‿0'
+⟨ 0 1.5707963267948966 0 ⟩
+1.5707963267948966
+```
 
 Geodesic interpolation, i.e. slerp (`hao_geodesic`, `Geodesic` in `lang/engine.bqn`):
 
+```math
 \gamma(t) = \frac{\sin((1-t)\theta)}{\sin\theta}\,x + \frac{\sin(t\theta)}{\sin\theta}\,y
+```
+
+HAΩ (`lang/engine.bqn`) · glyph `x ⌁ y` = $`\gamma(\tfrac12)`$ · C kernel `hao_geodesic(x, y, t, out)` · bridge `•hao.Geodesic x y t`:
+
+```bqn
+Geodesic ← {
+  x ← ⊢
+  y ← ⊣
+  t ← ⊤
+  θ ← Arccos Dot x y
+  s0 ← Sin ((1-t)×θ)
+  s1 ← Sin (t×θ)
+  ((s0×x) + (s1×y)) ÷ Sin θ
+}
+```
+
+```console
+$ bin-ccomp/hao-bqn lang/engine.bqn -e 'Geodesic 1‿0‿0 0‿1‿0 0.5' -e '1‿0‿0 ⌁ 0‿1‿0'
+⟨ 0.7071067811865475 0.7071067811865475 0 ⟩
+⟨ 0.7071067811865475 0.7071067811865475 0 ⟩
+```
 
 Special orthogonal group and orthogonal invariance:
 
+```math
 \operatorname{SO}(n) = \{ Q \in \mathbb{R}^{n \times n} : Q^T Q = I,\ \det Q = 1 \}, \qquad \lVert Qx \rVert^2 = \lVert x \rVert^2
+```
 
-Recursive geometric state, where $\Phi$ is a pure function preserving declared invariants (unit norm, tangency, shape):
+HAΩ (`lang/group.bqn`) · glyph `⟂` (orthogonality) · C kernels `hao_is_special_orthogonal`, `hao_group_act_matrix` · bridge `•hao.IsSO`, `•hao.Act`. The rotation by 90° below keeps $`\lVert Qx \rVert`$ = 5:
 
+```bqn
+Act ← {
+  g ← ⊢
+  x ← ⊣
+  g × x
+}
+
+Stabilizer ← {
+  g ← ⊢
+  x ← ⊣
+  Act g x ≡ x
+}
+```
+
+```console
+$ bin-ccomp/hao-bqn lang/group.bqn -e 'r ← 2‿2⥊0‿¯1‿1‿0' -e '•hao.IsSO r' -e '•hao.Act r 3‿4' -e '•hao.Norm •hao.Act r 3‿4' -e 'Stabilizer 1 3‿4'
+2‿2⥊⟨ 0 ¯1 1 0 ⟩
+1
+⟨ ¯4 3 ⟩
+5
+1
+```
+
+Recursive geometric state, where $`\Phi`$ is a pure function preserving declared invariants (unit norm, tangency, shape):
+
+```math
 G_{n+1} = \Phi(G_n), \qquad X_{n+1} = \operatorname{Exp}_{X_n}(\eta_n V_n)
+```
+
+HAΩ (`lang/engine.bqn`, fuel-bounded recursion with $`\eta_n = \eta`$ and $`V_n = v`$) · C kernel `hao_evolve_sphere(x, v, η, steps, out)` · bridge `•hao.Evolve x v η n`. Both reuse `v` unchanged at every step (see §13):
+
+```bqn
+Evolve ← {
+  x ← ⊢
+  v ← ⊣
+  η ← ⊤
+  n ← ⊥
+  n = 0 ? x ◇ Evolve (SphereExp x (η×v)) v η (n-1)
+}
+```
+
+```console
+$ bin-ccomp/hao-bqn lang/engine.bqn -e 'Evolve 1‿0‿0 0‿0.05‿0 1 3' -e '•hao.Evolve 1‿0‿0 0‿0.05‿0 1 3'
+⟨ 0.9962554647802354 0.1497502030301618 0 ⟩
+⟨ 0.9962554647802354 0.1497502030301618 0 ⟩
+```
 
 Geometric product of vectors in Cl(3,0) (`hao_geometric_product3`, `hao_mv_product`):
 
+```math
 ab = a \cdot b + a \wedge b
+```
 
-The multivector basis order is bitmask order: $1, e_1, e_2, e_{12}, e_3, e_{13}, e_{23}, e_{123}$.
+HAΩ (`lang/ga_ext.bqn`) · glyph `a ⊙ b` · C kernels `hao_geometric_product3` → `[s e23 e31 e12]`, `hao_mv_product` (full Cl(3,0)). `⌊k⌋ v` rotates `v` by `k`, and `⌈` joins inside HAΩ blocks:
+
+```bqn
+Cross ← {
+  a ← ⊢
+  b ← ⊣
+  # 3D cross product from cyclic rotations (dual of the wedge a∧b)
+  (⌊1⌋ a × ⌊¯1⌋ b) - (⌊¯1⌋ a × ⌊1⌋ b)
+}
+
+GeoProd3 ← {
+  a ← ⊢
+  b ← ⊣
+  s ← Dot a b
+  # Scalar part then bivector part ⟨e23 e31 e12⟩
+  cr ← Cross a b
+  s ⌈ cr
+}
+```
+
+```console
+$ bin-ccomp/hao-bqn lang/engine.bqn lang/ga_ext.bqn -e 'GeoProd3 1‿0‿0 0‿1‿0' -e '1‿0‿0 ⊙ 0‿1‿0' -e 'Cross 1‿2‿3 4‿5‿6'
+⟨ 0 0 0 1 ⟩
+⟨ 0 0 0 1 ⟩
+⟨ ¯3 6 ¯3 ⟩
+```
+
+The multivector basis order is bitmask order: $`1, e_1, e_2, e_{12}, e_3, e_{13}, e_{23}, e_{123}`$.
+
+### Notation summary
+
+| Formula | HAΩ notation | C kernel |
+|---------|--------------|----------|
+| $`S^n`$ membership | `IsUnit x` | `hao_is_unit` |
+| $`\operatorname{Exp}_x(v)`$ | `SphereExp x v` | `hao_sphere_exp` |
+| $`\operatorname{Log}_x(y)`$, $`d(x,y)`$ | `•hao.Log x y`, `•hao.Distance x y` | `hao_sphere_log`, `hao_sphere_distance` |
+| $`\gamma(t)`$ | `Geodesic x y t`, `x ⌁ y` | `hao_geodesic` |
+| $`Q \in \operatorname{SO}(n)`$, $`Qx`$ | `•hao.IsSO q`, `Act g x` | `hao_is_special_orthogonal`, `hao_group_act_matrix` |
+| $`X_{n+1} = \operatorname{Exp}_{X_n}(\eta V)`$ | `Evolve x v η n` | `hao_evolve_sphere` |
+| $`ab = a \cdot b + a \wedge b`$ | `GeoProd3 a b`, `a ⊙ b` | `hao_geometric_product3` |
+| $`a \otimes b`$ | `a ⊗ b` | `hao_outer` |
+| $`a \perp b`$ | `a ⟂ b` | `hao_inner` |
+| reshape to shape $`s`$ | `s ⍡ x` | `hao_reshape` |
+| rotate by $`k`$ | `k ↻ x`, `⌊k⌋ x` | `hao_rotate` |
 
 ![Recursive geometry](docs/assets/recursive-geometry.svg)
 
@@ -403,7 +576,7 @@ Other builtins: `Sin Cos Tan Arcsin Arccos Arctan Sinh Cosh Tanh Exp Log Sqrt Ab
 |------|---------|-------------|
 | literals | numbers (`¯`, `e¯`, `π`, `∞`), characters, strings, `⟨⟩` lists, `‿` strands, `[ ]` arrays | — |
 | primitives | `+ - × ÷ ⋆ √ ⌊ ⌈ \| ¬ ∧ ∨ < > ≤ ≥ = ≠ ≡ ≢ ⊣ ⊢ ⥊ ∾ ≍ ⋈ ↑ ↓ ↕ ⌽ ⍉ / ⍋ ⍒ ⊏ ⊑ ⊐ ⊒ ∊ ⍷ ⊔ « » !` | dyadic `⍷` beyond lists; character arithmetic beyond `+ -` |
-| 1-modifiers | `˙ ˜ ˘ ¨ ⌜ ´ ˝ ` ⁼` | `⁼` only for `+ - × ÷ ⋆ √ ¬ ⊢ ⊣ ⌽ ⍉` |
+| 1-modifiers | `` ˙ ˜ ˘ ¨ ⌜ ´ ˝ ` ⁼ `` | `⁼` only for `+ - × ÷ ⋆ √ ¬ ⊢ ⊣ ⌽ ⍉` |
 | 2-modifiers | `∘ ○ ⊸ ⟜ ⊘ ◶ ⎉ ⍤ ⍟ ⎊ ⌾` (structural Under for selection functions) | `⚇` |
 | blocks | `𝕩 𝕨 𝕊`, guards `?` / `;`, trains, `← ↩ ⇐` | headers, multiple bodies, destructuring, user-defined modifiers (`_m`, `_m_`) |
 | system values | `•Show •Out •Repr •Fmt •Type •CurrentError •math.*` | namespaces, `•Import`, `•file`, `•FLines` |
@@ -634,8 +807,57 @@ PASS bqn_prims (CBQN reference)
 
 ## 12. Continuous integration
 
-The repository has no CI workflow yet. Until one is added, `make -f Makefile.ext check`
-(§9–§11) is the full verification and needs only a C compiler.
+Two GitHub Actions workflows run on `ubuntu-24.04`. Both only call
+`make -f Makefile.ext …`, so CI checks exactly what §9–§11 run locally.
+
+### 12.1 `CI` — [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+Runs on every push to `main`, on `v*` tags, on every pull request, and on demand.
+
+| Job | Compiler | What it runs |
+|-----|----------|--------------|
+| `gcc-14 / make -f Makefile.ext check` | GCC 14 | all C and BQN tests |
+| `clang / make -f Makefile.ext check` | Clang 18 | all C and BQN tests |
+| `gcc-14 ASan+UBSan / make -f Makefile.ext check` | GCC 14, `-O1 -fsanitize=address,undefined -fno-sanitize-recover=undefined` | all tests; any sanitizer report fails the job |
+| `CBQN reference for plain-BQN tests` | GCC 14 + CBQN `2bf102f` (cached) | `tests/run_bqn_tests.sh` with `CBQN=…`, so `bqn_prims` is cross-checked against CBQN |
+| `CompCert 3.18 / make -f Makefile.ext check` | CompCert `v3.18` built from source (cached) | all C and BQN tests with `ccomp` |
+
+CompCert is built with Ubuntu's Coq 8.18, OCaml and Menhir and cached under the
+key `compcert-v3.18-ubuntu-24.04-coq8.18`. A cold build takes about 4 minutes
+(job 02:19:39 → 02:23:49 UTC in run
+[45311536175](https://github.com/AHMADALIPARR/hermetic-array/actions/runs/45311536175)); with the cache the job only
+restores `/opt/compcert` and runs the tests. The CompCert jobs have a 30-minute
+`timeout-minutes`, and `apt-get` retries downloads 3 times.
+
+The native jobs use `gcc-14` instead of the runner's default GCC 13.3; see §13.
+
+Runs on `main`:
+
+| Commit | Run | Result |
+|--------|-----|--------|
+| `951c5ef` merge of #2 | [45311536175](https://github.com/AHMADALIPARR/hermetic-array/actions/runs/45311536175) | all 5 jobs pass |
+| `c08ece4` Fix LaTeX formatting in README.md | [45311723061](https://github.com/AHMADALIPARR/hermetic-array/actions/runs/45311723061) | all 5 jobs pass |
+
+### 12.2 `Release` — [`.github/workflows/release.yml`](.github/workflows/release.yml)
+
+Runs on `v*` tags, on pull requests that change the workflow, and on demand.
+
+| Job | What it does |
+|-----|--------------|
+| `build gcc` | `make -f Makefile.ext CC=gcc-14 check`, then packages `hao` and `hao-bqn` as `hermetic-array-<tag>-linux-x86_64-gcc.tar.gz` |
+| `build compcert` | the same with `ccomp`, as `hermetic-array-<tag>-linux-x86_64-compcert.tar.gz` |
+| `publish release` | `git archive` source tarball and `SHA256SUMS`; on a tag, `gh release create <tag> dist/* --generate-notes --verify-tag`; otherwise the files are uploaded as the `release-dry-run` artifact |
+
+The dry run for #2 passed all three jobs:
+[45311424328](https://github.com/AHMADALIPARR/hermetic-array/actions/runs/45311424328).
+
+To publish a release from `main`:
+
+```sh
+git checkout main && git pull
+git tag -a v0.1.0 -m "v0.1.0"
+git push origin v0.1.0
+```
 
 ## 13. Known issues in the original code
 
@@ -660,6 +882,15 @@ has a separate, working addition next to it.
 | `sphere.bqn` / `engine.bqn` | both define `Evolve` | the file loaded last wins | — |
 | `Norm ← +´×˘` | the squared norm | `Norm 3‿4` is 25 | `•hao.Norm` (5) |
 | `proofs/*.agda` | do not type-check | §8 | — |
+| `Evolve` (`engine.bqn`) and `hao_evolve_sphere` | reuse the same `v` at every step instead of transporting it, so after the first step `v` is no longer tangent and the state leaves $`S^n`$ | `•hao.Norm (•hao.Evolve 1‿0‿0 0‿0.05‿0 1 3)` is 1.0074473060225322, not 1 | — |
+
+One issue is in an addition rather than the original code: built with GCC 13.3
+at `-O2` (the `ubuntu-24.04` runner's default `gcc`), `hao-bqn` reports
+`length error: ∾ cell shapes differ` for `"abc" ∾ "de"`, which takes the wrong
+branch in `join2` (`src/interp_prim.c`). The same source passes at `-O1`, with
+`-fno-tree-vrp` or `-fno-thread-jumps`, and with GCC 14, Clang 18 and CompCert,
+and UBSan reports nothing. It has not been reduced to a confirmed compiler bug,
+so CI builds with `gcc-14` (§12).
 
 ## 14. Limitations
 
